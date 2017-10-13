@@ -66,7 +66,7 @@ void Graph::load_gfa(std::string infile_name){
     }
 }
 
-std::string Graph::check_bubble(std::string origniating_edge, std::vector<std::pair<std::string, std::string> > adjacent_nodes){
+std::pair<std::string, std::string> Graph::check_bubble(std::pair<std::string, std::string> origniating_edge, std::vector<std::pair<std::string, std::string> > adjacent_nodes){
     // node list are candidate bubble contigs. if the nodes go to and from same contigs, its a bubble
     std::set<std::pair<std::string, std::string> > seqs;
     // to be in the same bubble, the contigs have to join the same ends of the adjacent contigs
@@ -82,38 +82,36 @@ std::string Graph::check_bubble(std::string origniating_edge, std::vector<std::p
     if (seqs.size() == 2){
         // if only 2 sequences joined to all candidate nodes, they are in a bubble
         // to avoid traversing this part again, return next node and its direction
+        for (auto seq: seqs){
+            if (seq != origniating_edge){
+                return seq;
+            }
+        }
     }
+    return std::make_pair("","");
 
 }
 
-void Graph::traverse_graph(std::string start_node, std::stringstream &link_lines, std::vector<std::pair<std::string, std::string>> &traversed_edge_list, std::string in_dir){
-    std::vector<std::pair<std::string, std::string> > adjacent_nodes = edge_list[std::make_pair(start_node, in_dir)];
+void Graph::traverse_graph(std::string start_node, std::string in_dir){
+    // get nodes joined from other direction
+    std::pair<std::string, std::string> node = std::make_pair(start_node, switch_pm[in_dir]) ;// should probably just feed this in as aprameter
+    std::vector<std::pair<std::string, std::string> > adjacent_nodes = edge_list[node];
     if (adjacent_nodes.size() == 0){// we can traverse no further
-        exit;
-    } else if (adjacent_nodes.size() == 0){
+        exit(0);
+    } else if (adjacent_nodes.size() == 1){
         //travers to next contig
     } else {
-        std::string bubble = check_bubble(start_node, adjacent_nodes);
-    }
-    //don't need this as will just not loop, so stop and return
-    bool can_traverse_further;// if we can leave an edge in the opposite direction, i.e. if came in on +, and left side of link, then either + on right or - on left
-    // now we need to traverse in single direction, so for edge, need to know which direction we came in on  (+/-), and leave by other
-    for (auto node = adjacent_nodes.begin(); node != adjacent_nodes.end(); ++node){ //= adjacent_nodes.begin(); node != adjacent_nodes.end(); ++node){
-        std::string end_node = std::get<0>(*node);
-        std::pair<std::string, std::string> edge_set = std::make_pair(start_node, end_node);
-        if (std::find(traversed_edge_list.begin(), traversed_edge_list.end(), edge_set) == traversed_edge_list.end()){
-         //determine whether vertex order must be flipped to ensure sequences concatenated in correct order
-            bool edge_direction_correct = get<3>(*node);
-            if (edge_direction_correct){
-                link_lines << "L" << "\t" << start_node << "\t" << std::get<1>(*node)  << "\t" << end_node << "\t" << std::get<2>(*node) << "\t" << "0M" << std::endl;
-            } else {
-                link_lines << "L" << "\t" << end_node << "\t" << std::get<2>(*node)  << "\t" << start_node << "\t" << std::get<1>(*node) << "\t" << "0M" << std::endl;
-            }
-            traversed_edge_list.push_back(edge_set);
-            if (can_traverse_further){
-                traverse_graph(get<0>(*node), link_lines, traversed_edge_list);
-            }
+        std::pair<std::string, std::string> contig_other_end_bubble = check_bubble(node, adjacent_nodes);
+        if (std::get<0>(contig_other_end_bubble) != "" & std::get<1>(contig_other_end_bubble) != ""){
+            //!!!!!! not enforcing bubble degree, but this assumes deg 2....
+            bubbles.push_back(std::make_pair(std::get<0>(adjacent_nodes[0]), std::get<0>(adjacent_nodes[1])));
+                    /// continue traversing from other end of bubble
+            traverse_graph(std::get<0>(contig_other_end_bubble), std::get<1>(contig_other_end_bubble));
+        } else {
+            // if we've hit something that is not a bubble, we can't phase further, so exit
+
+            exit(0);
+        }
     }
 }
 
-}
