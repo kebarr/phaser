@@ -55,17 +55,21 @@ void Graph::load_gfa(std::string infile_name){
         std::istringstream(line) >> fields[0] >> fields[1] >> fields[2] >> fields[3] >> fields[4];
         // to traverse graph only links are required
         if (fields[0] == "L"){
-            std::tuple<std::string, std::string, std::string> value_fwd = std::make_tuple(fields[3], fields[2], fields[4]);
+            std::pair<std::string, std::string> value_fwd = std::make_pair(fields[3], fields[4]);
             // need to store both ways around to ensure every edge connected to a given node is traversed
-            std::tuple<std::string, std::string, std::string> value_bwd = std::make_tuple(fields[1], switch_pm[fields[4]], switch_pm[fields[2]]);                                                                                                                                                                                                       edge_list[fields[1]].push_back(value_fwd);
-            edge_list[fields[1]].push_back(value_fwd);
-            edge_list[fields[3]].push_back(value_bwd);
+            std::pair<std::string, std::string> value_bwd = std::make_pair(fields[1], switch_pm[fields[2]]);
+            std::pair<std::string, std::string> inverse_link = std::make_pair(fields[3], switch_pm[fields[4]]);
+            //std::string t = switch_pm[fields[2]];
+            //std::tuple<std::string, std::string> value_bwd = std::make_tuple(t, t);                                                                                                                                                                                                       edge_list[fields[1]].push_back(value_fwd);
+            edge_list[std::make_pair(fields[1], fields[2])].push_back(value_fwd);
+            //std::pair<std::string, std::string> inverse_link = std::make_pair(fields[3], switch_pm[fields[4]]);
+            edge_list[inverse_link].push_back(value_bwd);
         }
     }
 }
 
-void Graph::traverse_graph(std::string start_node, std::stringstream &link_lines, std::vector<std::pair<std::string, std::string>> &traversed_edge_list){
-    std::vector<std::tuple<std::string, std::string, std::string> > adjacent_nodes = edge_list[start_node];
+void Graph::traverse_graph(std::string start_node, std::stringstream &link_lines, std::vector<std::pair<std::string, std::string>> &traversed_edge_list, std::string in_dir){
+    std::vector<std::pair<std::string, std::string> > adjacent_nodes = edge_list[std::make_pair(start_node, in_dir)];
     bool can_traverse_further;// if we can leave an edge in the opposite direction, i.e. if came in on +, and left side of link, then either + on right or - on left
     // now we need to traverse in single direction, so for edge, need to know which direction we came in on  (+/-), and leave by other
     for (auto node = adjacent_nodes.begin(); node != adjacent_nodes.end(); ++node){ //= adjacent_nodes.begin(); node != adjacent_nodes.end(); ++node){

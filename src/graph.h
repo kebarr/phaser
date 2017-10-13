@@ -21,8 +21,8 @@ const int BUBBLEDEGREE=2;
 class Graph
 {
 public:
-    std::map <std::string, std::vector<std::tuple<std::string, std::string, std::string> > > edge_list;
-    void traverse_graph(std::string, std::stringstream&, std::vector<std::pair<std::string, std::string>>&);
+    std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > > edge_list;
+    void traverse_graph(std::string, std::stringstream&, std::vector<std::pair<std::string, std::string>>&, std::string);
     Graph();
     void add_bubble(std::vector<int>);
     std::vector<std::vector <int> > bubbles;
