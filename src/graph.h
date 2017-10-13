@@ -14,19 +14,22 @@
 #include <fstream>
 #include <sstream>
 #include <istream>
-
+#include <set>
 
 const int BUBBLEDEGREE=2;
 // it should be possible to extend this so that we can construct phase blocks from haplotypes. keep completely minimal for now.
 class Graph
 {
+private:
+    std::map<std::string, std::string> switch_pm = {{"+","-"}, {"-","+"}};
 public:
+    std::vector<std::pair< std::string, std::string> > bubbles;
+    std::string check_bubble(std::string, std::vector<std::pair<std::string, std::string> > );
     std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > > edge_list;
     void traverse_graph(std::string, std::stringstream&, std::vector<std::pair<std::string, std::string>>&, std::string);
     Graph();
     void add_bubble(std::vector<int>);
-    std::vector<std::vector <int> > bubbles;
-    std::vector<std::vector <int> > calculate_possible_haplotypes(void);
+    std::vector<std::vector <std::string> >  calculate_possible_haplotypes(void);
     void load_gfa(std::string);
 
 
