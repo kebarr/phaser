@@ -49,6 +49,8 @@ void Graph::load_gfa(std::string infile_name){
     std::ifstream infile(infile_name);
     std::string line;
     std::string fields[5];
+    int counter = 0;
+    std::cout << "Loading GFA file " << infile_name << std::endl;
     while (std::getline(infile, line)){
         std::istringstream(line) >> fields[0] >> fields[1] >> fields[2] >> fields[3] >> fields[4];
         // to traverse graph only links are required
@@ -62,8 +64,10 @@ void Graph::load_gfa(std::string infile_name){
             edge_list[std::make_pair(fields[1], fields[2])].push_back(value_fwd);
             //std::pair<std::string, std::string> inverse_link = std::make_pair(fields[3], switch_pm[fields[4]]);
             edge_list[inverse_link].push_back(value_bwd);
+            counter +=1;
         }
     }
+    std::cout << "Loaded GFA with " << counter << " links" << edge_list.size()<<std::endl;
 }
 
 std::pair<std::string, std::string> Graph::check_bubble(std::pair<std::string, std::string> origniating_edge, std::vector<std::pair<std::string, std::string> > adjacent_nodes){
@@ -92,21 +96,34 @@ std::pair<std::string, std::string> Graph::check_bubble(std::pair<std::string, s
 
 }
 
-void Graph::traverse_graph(std::string start_node, std::string in_dir){
-    // get nodes joined from other direction
+void Graph::traverse_graph(std::string start_node, std::string in_dir, std::vector<std::string > &traversed_edge_list){
+    // i replicated the links to ensure every on is a key in the dict
+    // get nodes joined from other direction- so when we start g
+    std::cout << "traversing from " << start_node << std::endl;
     std::pair<std::string, std::string> node = std::make_pair(start_node, switch_pm[in_dir]) ;// should probably just feed this in as aprameter
     std::vector<std::pair<std::string, std::string> > adjacent_nodes = edge_list[node];
+    for (auto l:adjacent_nodes){
+        std::cout << std::get<0>(l) << " " << std::get<1>(l) << std::endl;
+
+    }
     if (adjacent_nodes.size() == 0){// we can traverse no further
         exit(0);
-    } else if (adjacent_nodes.size() == 1){
+    } else if (adjacent_nodes.size() == 1 && std::find(traversed_edge_list.begin(), traversed_edge_list.end(), std::get<0>(adjacent_nodes[0])) == traversed_edge_list.end()){
         //travers to next contig
-    } else {
+        traversed_edge_list.push_back(std::get<0>(adjacent_nodes[0]));
+        traverse_graph(std::get<0>(adjacent_nodes[0]), switch_pm[std::get<1>(adjacent_nodes[0])], traversed_edge_list);
+    } else if (std::find(traversed_edge_list.begin(), traversed_edge_list.end(), std::get<0>(adjacent_nodes[0]))== traversed_edge_list.end()
+        && std::find(traversed_edge_list.begin(), traversed_edge_list.end(), std::get<0>(adjacent_nodes[1]))== traversed_edge_list.end()){
+        traversed_edge_list.push_back(std::get<0>(adjacent_nodes[0]));
+        traversed_edge_list.push_back(std::get<0>(adjacent_nodes[1]));
+
         std::pair<std::string, std::string> contig_other_end_bubble = check_bubble(node, adjacent_nodes);
         if (std::get<0>(contig_other_end_bubble) != "" & std::get<1>(contig_other_end_bubble) != ""){
             //!!!!!! not enforcing bubble degree, but this assumes deg 2....
+            std::cout << "adding bubble " << std::get<0>(adjacent_nodes[0]) << " : " << std::get<0>(adjacent_nodes[1]) << std::endl;
             bubbles.push_back(std::make_pair(std::get<0>(adjacent_nodes[0]), std::get<0>(adjacent_nodes[1])));
                     /// continue traversing from other end of bubble
-            traverse_graph(std::get<0>(contig_other_end_bubble), std::get<1>(contig_other_end_bubble));
+            traverse_graph(std::get<0>(contig_other_end_bubble), switch_pm[std::get<1>(contig_other_end_bubble)], traversed_edge_list);
         } else {
             // if we've hit something that is not a bubble, we can't phase further, so exit
 

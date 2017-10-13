@@ -16,6 +16,7 @@
 #include <istream>
 #include <set>
 #include <stdlib.h>
+#include <algorithm>
 
 
 const int BUBBLEDEGREE=2;
@@ -28,9 +29,8 @@ public:
     std::vector<std::pair< std::string, std::string> > bubbles;
     std::pair<std::string, std::string> check_bubble(std::pair<std::string, std::string>, std::vector<std::pair<std::string, std::string> > );
     std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > > edge_list;
-    void traverse_graph(std::string, std::string);
+    void traverse_graph(std::string, std::string, std::vector<std::string >&);
     Graph();
-    void add_bubble(std::vector<int>);
     std::vector<std::vector <std::string> >  calculate_possible_haplotypes(void);
     void load_gfa(std::string);
 

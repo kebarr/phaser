@@ -52,8 +52,9 @@ int main(int argc, char **argv) {
     std::string start_edge;
     std::string output_file;
 
-
-    try {
+    graph_filename = argv[1];
+    start_edge = argv[2];
+    /*try {
         std::time_t t = std::time(nullptr);
         std::tm tm = *std::localtime(&t);
         std::string outdefault(
@@ -80,7 +81,7 @@ int main(int argc, char **argv) {
             std::cout << options.help({"", "Performance"}) << std::endl;
             exit(0);
         }
-        if (options.count("o") != 1 /*or options.count("i")<2*/) {
+        if (options.count("o") != 1 /*or options.count("i")<2) {
             std::cout << "Error: please specify input files and output prefix" << std::endl
                       << " Use option --help to check command line arguments." << std::endl;
             exit(1);
@@ -100,6 +101,27 @@ int main(int argc, char **argv) {
     } catch (const cxxopts::OptionException &e) {
         std::cout << "error parsing options: " << e.what() << std::endl;
         exit(1);
-    }
+    }*/
 
+    Graph graph=Graph();
+    graph.load_gfa(graph_filename);
+    for (auto l:graph.edge_list){
+        std::cout << std::get<0>(l.first) << " " << std::get<1>(l.first) << std::endl;
+        std::cout << "is linked to " << std::endl;
+        for (auto i: l.second){
+            std::cout << std::get<0>(i) << " " << std::get<1>(i) << std::endl;
+        }
+    }
+    std::cout << "Traversing from start edge " << start_edge << " in + direction" << std::endl;
+    std::vector<std::string > traversed_edge_list;
+    graph.traverse_graph(start_edge, "+", traversed_edge_list);
+    std::cout << "Found " << graph.bubbles.size() << " bubbles from + direction" << std::endl;
+    std::cout << "Traversing from start edge " << start_edge << " in - direction" << std::endl;
+    traversed_edge_list.clear();
+    graph.traverse_graph(start_edge, "-", traversed_edge_list);
+
+    std::cout << "Found " << graph.bubbles.size() << " bubbles  in total" << std::endl;
+
+    std::vector<std::vector <std::string> > possible_haplotypes = graph.calculate_possible_haplotypes();
+    return 0;
 }
