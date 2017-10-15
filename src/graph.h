@@ -28,7 +28,7 @@ private:
 public:
     std::vector<std::pair< std::string, std::string> > bubbles;
     std::pair<std::string, std::string> check_bubble(std::pair<std::string, std::string>, std::vector<std::pair<std::string, std::string> > );
-    std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > > edge_list;
+    std::map < std::pair<std::string, std::string> , std::set<std::pair<std::string, std::string> > > edge_list;
     void traverse_graph(std::string, std::string, std::vector<std::string >&);
     Graph();
     std::vector<std::vector <std::string> >  calculate_possible_haplotypes(void);

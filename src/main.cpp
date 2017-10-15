@@ -121,7 +121,15 @@ int main(int argc, char **argv) {
     graph.traverse_graph(start_edge, "-", traversed_edge_list);
 
     std::cout << "Found " << graph.bubbles.size() << " bubbles  in total" << std::endl;
-
+    for (auto l:graph.bubbles){
+        std::cout << std::get<0>(l) << " " << std::get<1>(l) << std::endl;
+    }
     std::vector<std::vector <std::string> > possible_haplotypes = graph.calculate_possible_haplotypes();
+    std::cout<< "found " << possible_haplotypes.size() << "candidate haplotypes of length " << possible_haplotypes[0].size() << std::endl;
+    std::cout << "Found " << graph.bubbles.size() << " bubbles  in total" << std::endl;
+    for (auto l:possible_haplotypes[0]) {
+        std::cout << l << " ";
+    }
+    std::cout << std::endl;
     return 0;
 }
