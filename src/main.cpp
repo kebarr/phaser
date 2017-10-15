@@ -136,5 +136,6 @@ int main(int argc, char **argv) {
     std::cout<<  "loading " << mappings_filename << std::endl;
     HaplotypeScorer haplotype_scorer = HaplotypeScorer(mappings_filename, possible_haplotypes, graph);
     haplotype_scorer.load_mappings();
+    haplotype_scorer.decide_barcode_haplotype_support();
     return 0;
 }
