@@ -26,6 +26,8 @@ class Graph
 private:
     std::map<std::string, std::string> switch_pm = {{"+","-"}, {"-","+"}};
 public:
+    std::set<std::string> edges;
+
     std::vector<std::pair< std::string, std::string> > bubbles;
     std::pair<std::string, std::string> check_bubble(std::pair<std::string, std::string>, std::vector<std::pair<std::string, std::string> > );
     std::map < std::pair<std::string, std::string> , std::set<std::pair<std::string, std::string> > > edge_list;

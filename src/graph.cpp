@@ -60,6 +60,8 @@ void Graph::load_gfa(std::string infile_name){
         std::istringstream(line) >> fields[0] >> fields[1] >> fields[2] >> fields[3] >> fields[4];
         // to traverse graph only links are required
         if (fields[0] == "L"){
+            edges.insert(fields[1]);
+            edges.insert(fields[2]);
             std::pair<std::string, std::string> value_fwd = std::make_pair(fields[3], fields[4]);
             // need to store both ways around to ensure every edge connected to a given node is traversed
             std::pair<std::string, std::string> value_bwd = std::make_pair(fields[1], switch_pm[fields[2]]);

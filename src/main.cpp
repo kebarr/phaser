@@ -11,6 +11,7 @@
 
 #include "../deps/cxxopts/include/cxxopts.hpp"
 #include "graph.h"
+#include "haplotype_scorer.h"
 
 Graph load_subgraph(std::string subgraph_filename){
     std::ifstream subgraph(subgraph_filename);
@@ -54,6 +55,7 @@ int main(int argc, char **argv) {
 
     graph_filename = argv[1];
     start_edge = argv[2];
+    mappings_filename = argv[3];
     /*try {
         std::time_t t = std::time(nullptr);
         std::tm tm = *std::localtime(&t);
@@ -106,10 +108,15 @@ int main(int argc, char **argv) {
     Graph graph=Graph();
     graph.load_gfa(graph_filename);
     for (auto l:graph.edge_list){
-        std::cout << std::get<0>(l.first) << " " << std::get<1>(l.first) << std::endl;
-        std::cout << "is linked to " << std::endl;
-        for (auto i: l.second){
-            std::cout << std::get<0>(i) << " " << std::get<1>(i) << std::endl;
+        if (std::get<0>(l.first) == "1234" or std::get<0>(l.first) == "422474" or std::get<0>(l.first)==  "939714" or std::get<0>(l.first)== "1256968") {
+            std::cout << std::get<0>(l.first) << " " << std::get<1>(l.first) << std::endl;
+            std::cout << "is linked to " << std::endl;
+            for (auto i: l.second) {
+                std::string e = std::get<0>(i);
+                if (e == "1234" || e == "422474" ||e == "939714" or std::get<0>(i)== "1256968") {
+                    std::cout << std::get<0>(i) << " " << std::get<1>(i) << std::endl;
+                }
+            }
         }
     }
     std::cout << "Traversing from start edge " << start_edge << " in + direction" << std::endl;
@@ -126,10 +133,8 @@ int main(int argc, char **argv) {
     }
     std::vector<std::vector <std::string> > possible_haplotypes = graph.calculate_possible_haplotypes();
     std::cout<< "found " << possible_haplotypes.size() << "candidate haplotypes of length " << possible_haplotypes[0].size() << std::endl;
-    std::cout << "Found " << graph.bubbles.size() << " bubbles  in total" << std::endl;
-    for (auto l:possible_haplotypes[0]) {
-        std::cout << l << " ";
-    }
-    std::cout << std::endl;
+    std::cout<<  "loading " << mappings_filename << std::endl;
+    HaplotypeScorer haplotype_scorer = HaplotypeScorer(mappings_filename, possible_haplotypes, graph);
+    haplotype_scorer.load_mappings();
     return 0;
 }
