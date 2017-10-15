@@ -24,6 +24,7 @@ private:
     std::map<std::string, std::vector <int> > edge_haplotype_dict;
     std::map<std::string, std::map<std::string, int> > barcode_edge_mappings;
     std::map<std::string, std::map<int, int> > barcode_haplotype_mappings;
+    std::vector<int>  winner_for_barcode(std::string barcode);
 
 public:
     std::string mapping_filename;
@@ -31,7 +32,7 @@ public:
     HaplotypeScorer(std::string, std::vector<std::vector <std::string> >, Graph);
     void load_mappings();
     void decide_barcode_haplotype_support();
-
+    std::vector<std::string> score_haplotypes();
 };
 
 

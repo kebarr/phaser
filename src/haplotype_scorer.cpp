@@ -31,6 +31,73 @@ void print_vector(std::vector<std::string> vec){
     std::cout << std::endl;
 }
 
+std::vector<int>  HaplotypeScorer::winner_for_barcode(std::string barcode){
+    int max=0;
+    std::vector<int> winners;
+    for (auto h:barcode_haplotype_mappings[barcode]){
+        if (h.second > max){
+            max = h.second;
+        }
+    }
+    //TODO: DECIDE CRITERIA FOR MINIMUM SUPPORT
+    if (max <10){
+        return winners;
+    }
+    for (auto h:barcode_haplotype_mappings[barcode]){
+        if (h.second == max){
+            winners.push_back(h.first);
+        }
+    }
+    return winners;
+}
+
+std::vector<std::string> HaplotypeScorer::score_haplotypes(){
+    //initialize score arrays- index is haplotype index
+    int haplotype_support[possible_haplotypes.size()] = {0};
+    int haplotype_not_support[possible_haplotypes.size()] = {0};
+    int haplotype_overall_support[possible_haplotypes.size()] = {0};
+    std::map<std::pair<int, int>, int> hap_pair_not_support;
+    std::map<std::pair<int, int>, int>  hap_pair_support;
+    std::map<std::pair<int, int>, int> hap_pair_support_total_score;
+    std::string barcode;
+    std::vector<int> winners;
+    int pair;
+    for (auto bm: barcode_haplotype_mappings){
+        barcode = bm.first;
+        winners = winner_for_barcode(barcode);
+        if (winners.size() > 0) {
+            for (int hap = 0; hap < possible_haplotypes.size() / 2; hap++) {
+                pair = possible_haplotypes.size() / 2;
+                if (bm.second.find(hap) != bm.second.end() or bm.second.find(pair) != bm.second.end() ) {
+                    if (bm.second.find(hap) != bm.second.end() ){
+                        haplotype_overall_support[hap] += bm.second[hap];
+                        if (std::find(winners.begin(), winners.end(), hap) != winners.end()){
+                            haplotype_support[hap] += 1;
+                            hap_pair_support[std::make_pair(hap, pair)] += 1;
+                            hap_pair_support_total_score[std::make_pair(hap, pair)] += bm.second[hap];
+                        } else {
+                            haplotype_not_support[hap] += 1;
+                        }
+
+                    } else if (bm.second.find(pair) != bm.second.end() ){
+                        haplotype_overall_support[pair] += bm.second[pair];
+                        if (std::find(winners.begin(), winners.end(), pair) != winners.end()){
+                            haplotype_support[pair] += 1;
+                            hap_pair_support[std::make_pair(hap, pair)] += 1;
+                            hap_pair_support_total_score[std::make_pair(hap, pair)] += bm.second[pair];
+                        } else {
+                            haplotype_not_support[hap] += 1;
+                        }
+                    }
+                } else if (bm.second.find(hap) == bm.second.end() and bm.second.find(pair) == bm.second.end() ){
+                    hap_pair_not_support[std::make_pair(hap, pair)] += 1;
+                }
+            }
+        }
+    }
+
+}
+
 void HaplotypeScorer::decide_barcode_haplotype_support(){
     std::vector<std::string> edges;
     std::vector<std::string> edges_in_haplotype;
@@ -45,23 +112,15 @@ void HaplotypeScorer::decide_barcode_haplotype_support(){
             for (auto e: mapping.second){
                 edges.push_back(e.first);
             }
-            //std::cout << "edges barcode maps to: " << edges.size();
-            //print_vector(edges);
             for (int i=0; i < possible_haplotypes.size(); i++){
                 h = possible_haplotypes[i];
-                //std::cout << "edges in haplotype: " << h.size();
-                //print_vector(h);
                 // find all edges in each haplotype that this barcode maps to
                 for (auto e1: h){
-                    //std::cout << e1 << std::endl;
                     if (std::find(edges.begin(), edges.end(), e1) != edges.end()){
                         edges_in_haplotype.push_back(e1);
-                        //std::cout << "added "<< e1 << std::endl;
                     }
                 }
 
-                //std::cout << "edges in haplotype barcode maps to: " << edges.size();
-                //print_vector(edges_in_haplotype);
                 // somewhat arbitrary rule to decide if the barcode supports a haplotype enough
                 if (edges_in_haplotype.size() > edges.size()/2 && edges_in_haplotype.size() >1){
                     for (auto a: edges_in_haplotype){
@@ -70,6 +129,8 @@ void HaplotypeScorer::decide_barcode_haplotype_support(){
                     barcode_haplotype_mappings[mapping.first][i] = support;
                     support = 0;
                     haplotypes_supported +=1;
+                } else {
+                    unused_barcodes.push_back(mapping.first);
                 }
                 edges_in_haplotype.clear();
             }
