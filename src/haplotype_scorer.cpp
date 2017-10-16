@@ -73,9 +73,9 @@ std::vector<int>  HaplotypeScorer::winner_for_barcode(std::string barcode){
         }
     }
     //TODO: DECIDE CRITERIA FOR MINIMUM SUPPORT
-    if (max <10){
+    /*if (max <10){
         return winners;
-    }
+    }*/
     for (auto h:barcode_haplotype_mappings[barcode]){
         if (h.second == max){
             winners.push_back(h.first);
@@ -93,14 +93,15 @@ std::vector<std::string> HaplotypeScorer::score_haplotypes(){
     std::map<std::pair<int, int>, int>  hap_pair_support;
     std::map<std::pair<int, int>, int> hap_pair_support_total_score;
     std::string barcode;
-    std::vector<int> winners;
-    int pair;
     for (auto bm: barcode_haplotype_mappings){
         barcode = bm.first;
-        winners = winner_for_barcode(barcode);
+        // winner_for_this_barcode = [h for h in self.barcode_mappings[barcode] if self.barcode_mappings[barcode][h] == np.max(hap_support_dict.values())]
+        std::vector<int> winners = winner_for_barcode(barcode); // ideally should be length 1
         if (winners.size() > 0) {
+            // for haplotype in range(len(self.list_of_possible_haplotypes)/2):
             for (int hap = 0; hap < possible_haplotypes.size() / 2; hap++) {
-                pair = possible_haplotypes.size() / 2;
+                // pair = len(self.list_of_possible_haplotypes) -1 -haplotype
+                int pair = possible_haplotypes.size() - 1 - hap;
                 if (bm.second.find(hap) != bm.second.end() or bm.second.find(pair) != bm.second.end() ) {
                     if (bm.second.find(hap) != bm.second.end() ){
                         haplotype_overall_support[hap] += bm.second[hap];
@@ -108,8 +109,6 @@ std::vector<std::string> HaplotypeScorer::score_haplotypes(){
                             haplotype_support[hap] += 1;
                             hap_pair_support[std::make_pair(hap, pair)] += 1;
                             hap_pair_support_total_score[std::make_pair(hap, pair)] += bm.second[hap];
-                        } else {
-                            haplotype_not_support[hap] += 1;
                         }
 
                     } else if (bm.second.find(pair) != bm.second.end() ){
@@ -118,9 +117,13 @@ std::vector<std::string> HaplotypeScorer::score_haplotypes(){
                             haplotype_support[pair] += 1;
                             hap_pair_support[std::make_pair(hap, pair)] += 1;
                             hap_pair_support_total_score[std::make_pair(hap, pair)] += bm.second[pair];
-                        } else {
-                            haplotype_not_support[hap] += 1;
                         }
+                    }
+                    if (bm.second.find(hap) == bm.second.end() ) {
+                        haplotype_not_support[hap] += 1;
+                    }
+                    if (bm.second.find(pair) == bm.second.end() )  {
+                        haplotype_not_support[pair] += 1;
                     }
                 } else if (bm.second.find(hap) == bm.second.end() and bm.second.find(pair) == bm.second.end() ){
                     hap_pair_not_support[std::make_pair(hap, pair)] += 1;
@@ -262,12 +265,6 @@ void HaplotypeScorer::decide_barcode_haplotype_support(){
         //std::cout << "barcode " << mapping.first << " supports " << haplotypes_supported << std::endl;
 
         haplotypes_supported = 0;
-    }
-    for (auto b: barcode_edge_mappings){
-        std::cout << "barcode: " << b.first << " edge mappings: ";
-        for (auto h: b.second){
-            std::cout << h.first << " " << h.second << std::endl;
-        }
     }
     std::cout << "Calculated haplotype support for each barcode, " << barcode_haplotype_mappings.size() <<  std::endl;
 

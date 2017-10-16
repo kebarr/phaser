@@ -50,13 +50,6 @@ std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
                 for (int i = from_index; i < haplotypes.size(); i++) {
                     haplotypes[i].push_back(b1);
                 }
-        std::cout << "haplotypes size: " << haplotypes.size() << " to index " << to_index << " from index " << from_index <<std::endl;
-        for (auto h: haplotypes){
-            for (auto i:h){
-                std::cout << i << " ";
-            }
-            std::cout << std::endl;
-        }
     }
     return haplotypes;
 }
