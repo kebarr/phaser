@@ -107,18 +107,6 @@ int main(int argc, char **argv) {
 
     Graph graph=Graph();
     graph.load_gfa(graph_filename);
-    for (auto l:graph.edge_list){
-        if (std::get<0>(l.first) == "1234" or std::get<0>(l.first) == "422474" or std::get<0>(l.first)==  "939714" or std::get<0>(l.first)== "1256968") {
-            std::cout << std::get<0>(l.first) << " " << std::get<1>(l.first) << std::endl;
-            std::cout << "is linked to " << std::endl;
-            for (auto i: l.second) {
-                std::string e = std::get<0>(i);
-                if (e == "1234" || e == "422474" ||e == "939714" or std::get<0>(i)== "1256968") {
-                    std::cout << std::get<0>(i) << " " << std::get<1>(i) << std::endl;
-                }
-            }
-        }
-    }
     std::cout << "Traversing from start edge " << start_edge << " in + direction" << std::endl;
     std::vector<std::string > traversed_edge_list;
     graph.traverse_graph(start_edge, "+", traversed_edge_list);
@@ -133,6 +121,12 @@ int main(int argc, char **argv) {
     }
     std::vector<std::vector <std::string> > possible_haplotypes = graph.calculate_possible_haplotypes();
     std::cout<< "found " << possible_haplotypes.size() << "candidate haplotypes of length " << possible_haplotypes[0].size() << std::endl;
+    for (auto h: possible_haplotypes){
+        for (auto i:h){
+            std::cout << i << " ";
+        }
+        std::cout << std::endl;
+    }
     std::cout<<  "loading " << mappings_filename << std::endl;
     HaplotypeScorer haplotype_scorer = HaplotypeScorer(mappings_filename, possible_haplotypes, graph);
     haplotype_scorer.load_mappings();

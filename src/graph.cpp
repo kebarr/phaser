@@ -33,9 +33,14 @@ std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
     for (int j=1; j < bubbles.size(); j++){
                 b0 = std::get<0>(bubbles[j]);
                 to_index = haplotypes.size();
-                for (auto &hap: haplotypes) {
-                    haplotypes.push_back(hap);
+        std::vector<std::vector <std::string> > new_haplotypes;
+                for (auto hap: haplotypes) {
+                    new_haplotypes.push_back(hap);
                 }
+                for (auto hap: haplotypes) {
+                    new_haplotypes.push_back(hap);
+                }
+                haplotypes = new_haplotypes;
                 for (int i = 0; i < to_index; i++) {
                     haplotypes[i].push_back(b0);
                 }
@@ -45,6 +50,13 @@ std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
                 for (int i = from_index; i < haplotypes.size(); i++) {
                     haplotypes[i].push_back(b1);
                 }
+        std::cout << "haplotypes size: " << haplotypes.size() << " to index " << to_index << " from index " << from_index <<std::endl;
+        for (auto h: haplotypes){
+            for (auto i:h){
+                std::cout << i << " ";
+            }
+            std::cout << std::endl;
+        }
     }
     return haplotypes;
 }
@@ -78,31 +90,19 @@ void Graph::load_gfa(std::string infile_name){
 }
 
 std::pair<std::string, std::string> Graph::check_bubble(std::pair<std::string, std::string> origniating_edge, std::vector<std::pair<std::string, std::string> > adjacent_nodes){
-    std::cout << "start node " << origniating_edge.first << " " << origniating_edge.second << std::endl;
-    for (auto l:adjacent_nodes){
-        std::cout << std::get<0>(l) << " " << std::get<1>(l) << std::endl;
-        std::cout << "is linked to " << std::endl;
-    }
     // node list are candidate bubble contigs. if the nodes go to and from same contigs, its a bubble
     std::set<std::pair<std::string, std::string> > seqs;
     // to be in the same bubble, the contigs have to join the same ends of the adjacent contigs
     for (auto node: adjacent_nodes){
         for (auto node2: edge_list[node]) {
-            std::cout << node2.first << " " << node2.second << std::endl;
             seqs.insert(node2);
         }
         std::pair<std::string, std::string>  opp_dir_nodes = std::make_pair(std::get<0>(node), switch_pm[std::get<1>(node)]);
         for (auto node2: edge_list[opp_dir_nodes]) {
-            std::cout << node2.first << " " << node2.second << std::endl;
             seqs.insert(node2);
         }
     }
-    std::cout << "printing seqs foudn" << std::endl;
-    for (auto l:seqs){
-        std::cout << std::get<0>(l) << " " << std::get<1>(l) << std::endl;
-    }
     if (seqs.size() == 2){
-        std::cout << "Found bubble" << std::endl;
         // if only 2 sequences joined to all candidate nodes, they are in a bubble
         // to avoid traversing this part again, return next node and its direction
         for (auto seq: seqs){
