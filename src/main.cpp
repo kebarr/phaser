@@ -131,6 +131,6 @@ int main(int argc, char **argv) {
     HaplotypeScorer haplotype_scorer = HaplotypeScorer(mappings_filename, possible_haplotypes, graph);
     haplotype_scorer.load_mappings();
     haplotype_scorer.decide_barcode_haplotype_support();
-    haplotype_scorer.score_haplotypes();
+    std::pair<std::vector<std::string>,std::vector<std::string> >  winners  = haplotype_scorer.score_haplotypes();
     return 0;
 }

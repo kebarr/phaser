@@ -33,7 +33,7 @@ public:
     HaplotypeScorer(std::string, std::vector<std::vector <std::string> >, Graph);
     void load_mappings();
     void decide_barcode_haplotype_support();
-    std::vector<std::string> score_haplotypes();
+    std::pair<std::vector<std::string>,std::vector<std::string> > score_haplotypes();
 };
 
 
