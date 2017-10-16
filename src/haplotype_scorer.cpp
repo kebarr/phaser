@@ -195,7 +195,7 @@ std::vector<std::string> HaplotypeScorer::score_haplotypes(){
             pair_overall_support_winner.push_back(h.first);
         }
     }
-    std::cout << "SUpport winner: ";
+    std::cout << "Support winner: ";
     print_int_vector(support_winner);
     std::cout << "overall SUpport winner: ";
     print_int_vector(overall_support_winner);
