@@ -126,22 +126,13 @@ int main(int argc, char **argv) {
     HaplotypeScorer haplotype_scorer = HaplotypeScorer(mappings_filename, possible_haplotypes, graph);
     haplotype_scorer.load_mappings();
     haplotype_scorer.decide_barcode_haplotype_support();
-    std::pair< std::pair<int, int>, std::pair<std::vector<std::string>,std::vector<std::string> > > winners  = haplotype_scorer.score_haplotypes();
-    std::pair<int, int> winning_pair = std::get<0>(winners);
+    int success  = haplotype_scorer.score_haplotypes();
     // if we've picked a winner
-    if (std::get<0>(winning_pair) != 0 && std::get<1>(winning_pair) != 0 ) {
-        std::ofstream out(output_file);
-        std::vector<std::string> winner1 = std::get<0>(std::get<1>(winners));
-        std::vector<std::string> winner2 = std::get<1>(std::get<1>(winners));
-        // need barcodes supporting this pair- to outputm for each barcode, total kmers, kmers agreeing, kmers disagreeing, kmers to hom parts, other
-        for (auto b:haplotype_scorer.haplotype_barcode_agree[winning_pair]){
-            int total_agreeing_kmers = b.second;
-            int total_hom_kmers = haplotype_scorer.
-            int total_disagreeing_kmers = 0;
-            if(haplotype_scorer.haplotype_barcode_disagree[winning_pair].find(b.first) != haplotype_scorer.haplotype_barcode_disagree[winning_pair].end()){
-                total_disagreeing_kmers = haplotype_scorer.haplotype_barcode_disagree[winning_pair][b.first];
-            }
-        }
+    if (success == 0) {
+        haplotype_scorer.write_output_success(output_file);
+
+    } else if (success == 1){ // if we're less confident about winner
+        haplotype_scorer.write_output_partial_success(output_file);
     }
     return 0;
 }

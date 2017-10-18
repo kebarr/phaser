@@ -35,6 +35,8 @@ public:
     Graph();
     std::vector<std::vector <std::string> >  calculate_possible_haplotypes(void);
     void load_gfa(std::string);
+    // easiest way to actually get phase string is get output sub gfa for each haplotype and stitch together
+    void write_output_subgraph(std::vector<std::string>, std::string) ;
 
 
 };

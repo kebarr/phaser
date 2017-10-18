@@ -81,72 +81,72 @@ std::vector<int>  HaplotypeScorer::winner_for_barcode(std::string barcode){
     return winners;
 }
 
-std::pair< std::pair<int, int>, std::pair<std::vector<std::string>,std::vector<std::string> > > HaplotypeScorer::score_haplotypes(){
+int HaplotypeScorer::score_haplotypes() {
     //initialize score arrays- index is haplotype index
     int haplotype_support[possible_haplotypes.size()] = {0};
     int haplotype_not_support[possible_haplotypes.size()] = {0};
     int haplotype_overall_support[possible_haplotypes.size()] = {0};
     std::map<std::pair<int, int>, int> hap_pair_not_support;
-    std::map<std::pair<int, int>, int>  hap_pair_support;
+    std::map<std::pair<int, int>, int> hap_pair_support;
     std::map<std::pair<int, int>, int> hap_pair_support_total_score;
     std::string barcode;
     std::ofstream mappings("barcode_mappings.txt");
-    for (auto &bm: barcode_haplotype_mappings){
-        for (auto e:bm.second){
-            mappings << bm.first << " : "<< e.first << " " << e.second << std::endl;
+    for (auto &bm: barcode_haplotype_mappings) {
+        for (auto e:bm.second) {
+            mappings << bm.first << " : " << e.first << " " << e.second << std::endl;
         }
     }
-    for (auto &bm: barcode_haplotype_mappings){
+    for (auto &bm: barcode_haplotype_mappings) {
         barcode = bm.first;
         // winner_for_this_barcode = [h for h in self.barcode_mappings[barcode] if self.barcode_mappings[barcode][h] == np.max(hap_support_dict.values())]
         std::vector<int> winners = winner_for_barcode(barcode); // ideally should be length 1
-            // for haplotype in range(len(self.list_of_possible_haplotypes)/2):
-            for (int hap = 0; hap < possible_haplotypes.size() / 2; hap++) {
-                // pair = len(self.list_of_possible_haplotypes) -1 -haplotype
-                int pair = possible_haplotypes.size() - 1 - hap;
-                    if (bm.second.find(hap) != bm.second.end() ) {
-                        haplotype_overall_support[hap] += bm.second[hap];
-                        hap_pair_support_total_score[std::make_pair(hap, pair)] += bm.second[hap];
-                        if (winners.size() > 0) {
-                            if (std::find(winners.begin(), winners.end(), hap) != winners.end()) {
-                                haplotype_support[hap] += 1;
-                                hap_pair_support[std::make_pair(hap, pair)] += 1;
-                                haplotype_barcode_agree[std::make_pair(hap, pair)][barcode] += bm.second[hap];
-                            }
-                        }
+        // for haplotype in range(len(self.list_of_possible_haplotypes)/2):
+        for (int hap = 0; hap < possible_haplotypes.size() / 2; hap++) {
+            // pair = len(self.list_of_possible_haplotypes) -1 -haplotype
+            int pair = possible_haplotypes.size() - 1 - hap;
+            if (bm.second.find(hap) != bm.second.end()) {
+                haplotype_overall_support[hap] += bm.second[hap];
+                hap_pair_support_total_score[std::make_pair(hap, pair)] += bm.second[hap];
+                if (winners.size() > 0) {
+                    if (std::find(winners.begin(), winners.end(), hap) != winners.end()) {
+                        haplotype_support[hap] += 1;
+                        hap_pair_support[std::make_pair(hap, pair)] += 1;
+                        haplotype_barcode_agree[std::make_pair(hap, pair)][barcode] += bm.second[hap];
                     }
-
-                    if (bm.second.find(pair) != bm.second.end() ){
-                        haplotype_overall_support[pair] += bm.second[pair];
-                        hap_pair_support_total_score[std::make_pair(hap, pair)] += bm.second[pair];
-                        if (winners.size() > 0) {
-                            if (std::find(winners.begin(), winners.end(), pair) != winners.end()) {
-                                haplotype_support[pair] += 1;
-                                hap_pair_support[std::make_pair(hap, pair)] += 1;
-                                // for each barcode which selects the winner, need total kmers agreeing/disagreeing
-                                haplotype_barcode_agree[std::make_pair(hap, pair)][barcode] += bm.second[pair];
-                            }
-                        }
-                    }
-                    if (bm.second.find(hap) == bm.second.end() ) {
-                        haplotype_not_support[hap] += 1;
-
-                    }
-                    if (bm.second.find(pair) == bm.second.end() )  {
-                        haplotype_not_support[pair] += 1;
-                    }
-                if (bm.second.find(hap) == bm.second.end() and bm.second.find(pair) == bm.second.end() ){
-                    hap_pair_not_support[std::make_pair(hap, pair)] += 1;
-                    haplotype_barcode_disagree[std::make_pair(hap, pair)][barcode] += bm.second[hap];
-                    haplotype_barcode_disagree[std::make_pair(hap, pair)][barcode] += bm.second[pair];
-
                 }
             }
+
+            if (bm.second.find(pair) != bm.second.end()) {
+                haplotype_overall_support[pair] += bm.second[pair];
+                hap_pair_support_total_score[std::make_pair(hap, pair)] += bm.second[pair];
+                if (winners.size() > 0) {
+                    if (std::find(winners.begin(), winners.end(), pair) != winners.end()) {
+                        haplotype_support[pair] += 1;
+                        hap_pair_support[std::make_pair(hap, pair)] += 1;
+                        // for each barcode which selects the winner, need total kmers agreeing/disagreeing
+                        haplotype_barcode_agree[std::make_pair(hap, pair)][barcode] += bm.second[pair];
+                    }
+                }
+            }
+            if (bm.second.find(hap) == bm.second.end()) {
+                haplotype_not_support[hap] += 1;
+
+            }
+            if (bm.second.find(pair) == bm.second.end()) {
+                haplotype_not_support[pair] += 1;
+            }
+            if (bm.second.find(hap) == bm.second.end() and bm.second.find(pair) == bm.second.end()) {
+                hap_pair_not_support[std::make_pair(hap, pair)] += 1;
+                haplotype_barcode_disagree[std::make_pair(hap, pair)][barcode] += bm.second[hap];
+                haplotype_barcode_disagree[std::make_pair(hap, pair)][barcode] += bm.second[pair];
+
+            }
+        }
     }
-    std::vector<int > haplotype_support_vals;
-    std::vector<int > haplotype_not_support_vals;
-    std::vector<int > haplotype_overall_support_vals;
-    for (int i=0; i < possible_haplotypes.size(); i++){
+    std::vector<int> haplotype_support_vals;
+    std::vector<int> haplotype_not_support_vals;
+    std::vector<int> haplotype_overall_support_vals;
+    for (int i = 0; i < possible_haplotypes.size(); i++) {
         haplotype_support_vals.push_back(haplotype_support[i]);
         haplotype_not_support_vals.push_back(haplotype_not_support[i]);
         haplotype_overall_support_vals.push_back(haplotype_overall_support[i]);
@@ -154,52 +154,70 @@ std::pair< std::pair<int, int>, std::pair<std::vector<std::string>,std::vector<s
     }
     auto support_max = std::max_element(haplotype_support_vals.begin(), haplotype_support_vals.end());
     auto support_mean = avg(haplotype_support_vals);
-    auto overall_support_max = std::max_element(haplotype_overall_support_vals.begin(), haplotype_overall_support_vals.end());
+    auto overall_support_max = std::max_element(haplotype_overall_support_vals.begin(),
+                                                haplotype_overall_support_vals.end());
     auto overall_support_mean = avg(haplotype_support_vals);
 
     auto support_stdev = stdev(haplotype_support_vals, support_mean);
 
     auto overall_stdev = stdev(haplotype_overall_support_vals, overall_support_mean);
-    std::cout << "Haplotype support max : " << *support_max << " min: " << *std::min_element(haplotype_support_vals.begin(), haplotype_support_vals.end()) << " mean: "<< support_mean << " stdev: " << support_stdev << std::endl;
-    std::cout << "Haplotype not support max : " << *std::max_element(haplotype_not_support_vals.begin(), haplotype_not_support_vals.end()) << " min: " << *std::min_element(haplotype_not_support_vals.begin(), haplotype_not_support_vals.end()) << " mean: "<< avg(haplotype_not_support_vals)<< std::endl;
-    std::cout << "Haplotype overall support max: " << *overall_support_max << " min: " << *std::min_element(haplotype_overall_support_vals.begin(), haplotype_overall_support_vals.end()) << " mean: "<< overall_support_mean << " stdev: " << overall_stdev << std::endl;
+    std::cout << "Haplotype support max : " << *support_max << " min: "
+              << *std::min_element(haplotype_support_vals.begin(), haplotype_support_vals.end()) << " mean: "
+              << support_mean << " stdev: " << support_stdev << std::endl;
+    std::cout << "Haplotype not support max : "
+              << *std::max_element(haplotype_not_support_vals.begin(), haplotype_not_support_vals.end()) << " min: "
+              << *std::min_element(haplotype_not_support_vals.begin(), haplotype_not_support_vals.end()) << " mean: "
+              << avg(haplotype_not_support_vals) << std::endl;
+    std::cout << "Haplotype overall support max: " << *overall_support_max << " min: "
+              << *std::min_element(haplotype_overall_support_vals.begin(), haplotype_overall_support_vals.end())
+              << " mean: " << overall_support_mean << " stdev: " << overall_stdev << std::endl;
 
-    std::vector< int> hap_pair_support_values;
-    for (auto h : hap_pair_support){
+    std::vector<int> hap_pair_support_values;
+    for (auto h : hap_pair_support) {
         hap_pair_support_values.push_back(h.second);
     }
-    std::vector< int> hap_pair_not_support_values;
-    for (auto h : hap_pair_not_support){
+    std::vector<int> hap_pair_not_support_values;
+    for (auto h : hap_pair_not_support) {
         hap_pair_not_support_values.push_back(h.second);
     }
-    std::vector< int> hap_pair_support_total_score_values;
-    for (auto h : hap_pair_support_total_score){
+    std::vector<int> hap_pair_support_total_score_values;
+    for (auto h : hap_pair_support_total_score) {
         hap_pair_support_total_score_values.push_back(h.second);
     }
     auto pair_support_max = std::max_element(hap_pair_support_values.begin(), hap_pair_support_values.end());
-    auto not_pair_support_max = std::max_element(hap_pair_not_support_values.begin(), hap_pair_not_support_values.end());
-    auto overall_pair_support_max = std::max_element(hap_pair_support_total_score_values.begin(), hap_pair_support_total_score_values.end());
+    auto not_pair_support_max = std::max_element(hap_pair_not_support_values.begin(),
+                                                 hap_pair_not_support_values.end());
+    auto overall_pair_support_max = std::max_element(hap_pair_support_total_score_values.begin(),
+                                                     hap_pair_support_total_score_values.end());
     auto pair_support_min = std::min_element(hap_pair_support_values.begin(), hap_pair_support_values.end());
-    auto not_pair_support_min = std::min_element(hap_pair_not_support_values.begin(), hap_pair_not_support_values.end());
-    auto overall_pair_support_min = std::min_element(hap_pair_support_total_score_values.begin(), hap_pair_support_total_score_values.end());
+    auto not_pair_support_min = std::min_element(hap_pair_not_support_values.begin(),
+                                                 hap_pair_not_support_values.end());
+    auto overall_pair_support_min = std::min_element(hap_pair_support_total_score_values.begin(),
+                                                     hap_pair_support_total_score_values.end());
     auto pair_support_mean = avg(hap_pair_support_values);
     auto pair_support_stdev = stdev(hap_pair_support_values, pair_support_mean);
     auto pair_not_support_mean = avg(hap_pair_not_support_values);
     auto pair_not_support_stdev = stdev(hap_pair_not_support_values, pair_not_support_mean);
     auto pair_overall_support_mean = avg(hap_pair_support_total_score_values);
     auto pair_overall_support_stdev = stdev(hap_pair_support_total_score_values, pair_overall_support_mean);
-    std::cout << "Haplotype pair support max : " << *pair_support_max << "min : "<< *pair_support_min << " mean: " << pair_support_mean << " stdev: " << pair_support_stdev<< std::endl;
-    std::cout << "Haplotype pair not support max : " << *not_pair_support_max << "min : "<< *not_pair_support_min << " mean: " << pair_not_support_mean << " stdev: " << pair_not_support_stdev<< std::endl;
-    std::cout << "Haplotype pair overall support max : " << *overall_pair_support_max << "min : "<< *overall_pair_support_min << " mean: " << pair_overall_support_mean << " stdev: " << pair_overall_support_stdev<< std::endl;
+    max_overall_pair_support = *overall_pair_support_max;
+    mean_overall_pair_support = pair_overall_support_mean;
+    std::cout << "Haplotype pair support max : " << *pair_support_max << "min : " << *pair_support_min << " mean: "
+              << pair_support_mean << " stdev: " << pair_support_stdev << std::endl;
+    std::cout << "Haplotype pair not support max : " << *not_pair_support_max << "min : " << *not_pair_support_min
+              << " mean: " << pair_not_support_mean << " stdev: " << pair_not_support_stdev << std::endl;
+    std::cout << "Haplotype pair overall support max : " << *overall_pair_support_max << "min : "
+              << *overall_pair_support_min << " mean: " << pair_overall_support_mean << " stdev: "
+              << pair_overall_support_stdev << std::endl;
 
     // get winners
     std::vector<int> support_winner;
-    std::vector<int>  overall_support_winner;
-    for (int h=0; h < possible_haplotypes.size(); h++){
-        if (haplotype_support[h] == *support_max){
+    std::vector<int> overall_support_winner;
+    for (int h = 0; h < possible_haplotypes.size(); h++) {
+        if (haplotype_support[h] == *support_max) {
             support_winner.push_back(h);
         }
-        if (haplotype_overall_support[h] == *overall_support_max){
+        if (haplotype_overall_support[h] == *overall_support_max) {
             overall_support_winner.push_back(h);
         }
     }
@@ -211,7 +229,7 @@ std::pair< std::pair<int, int>, std::pair<std::vector<std::string>,std::vector<s
         }
     }
     for (auto h: hap_pair_support_total_score) {
-        if (h.second == *overall_pair_support_max){
+        if (h.second == *overall_pair_support_max) {
             pair_overall_support_winner.push_back(h.first);
 
         }
@@ -226,12 +244,19 @@ std::pair< std::pair<int, int>, std::pair<std::vector<std::string>,std::vector<s
     print_pair_int_vector(pair_overall_support_winner);
     print_vector(possible_haplotypes[support_winner[0]]);
     // if they agree on all scores, call it
-    if (std::get<0>(pair_overall_support_winner[0]) == overall_support_winner[0] && std::get<0>(pair_support_winner[0]) == support_winner[0] ) {
-        return std::make_pair(pair_overall_support_winner[0], std::make_pair(possible_haplotypes[std::get<0>(pair_overall_support_winner[0])],
-                              possible_haplotypes[std::get<1>(pair_overall_support_winner[0])]));
+    if (std::get<0>(pair_overall_support_winner[0]) == overall_support_winner[0] &&
+        std::get<0>(pair_support_winner[0]) == support_winner[0]) {
+        winners = std::make_pair(possible_haplotypes[std::get<1>(pair_overall_support_winner[0])],
+                                 possible_haplotypes[std::get<0>(pair_overall_support_winner[0])]);
+        winning_pair = pair_overall_support_winner[0];
+        return 0;
+    } else if (*overall_pair_support_max > (pair_overall_support_mean + 2*pair_overall_support_stdev)){ // if it doesn't make it... pick best we can do, so pair overall support
+        winners = std::make_pair(possible_haplotypes[std::get<1>(pair_overall_support_winner[0])],
+                                 possible_haplotypes[std::get<0>(pair_overall_support_winner[0])]);
+        winning_pair = pair_overall_support_winner[0];
+        return 1;
     } else {
-        std::vector<std::string> empty;
-        return std::make_pair(std::make_pair(0, 0), std::make_pair(empty, empty));
+        return 2;
     }
 
 }
@@ -296,13 +321,65 @@ void HaplotypeScorer::decide_barcode_haplotype_support(){
 
 }
 
+void HaplotypeScorer::write_output_success(std::string output_file){
+    std::string o = "partial_" + output_file;// output is same for partial, just need to know somehow that were less confident
+    write_output_success(o);
+}
+void HaplotypeScorer::write_output_success(std::string output_file){
+    std::ofstream out(output_file);
+    std::vector<std::string> winner1 = std::get<0>(winners);
+    std::vector<std::string> winner2 = std::get<1>(winners);
+    out << "Haplotype 1: " << std::endl;
+    for (auto h: winner1){
+        out << h << " ";
+    }
+    out << std::endl;
+    out << "Haplotype 2: " << std::endl;
+    for (auto h: winner2){
+        out << h << " ";
+    }
+    out << std::endl;
+    out << "Barcodes supporting winner:" << std::endl;
+    std::vector<std::string> barcodes_seen;
+    // need barcodes supporting this pair- to outputm for each barcode, total kmers, kmers agreeing, kmers disagreeing, kmers to hom parts, other
+    for (auto b:haplotype_barcode_agree[winning_pair]){
+        barcodes_seen.push_back(b.first);
+        int total_agreeing_kmers = b.second;
+        int total_hom_kmers = barcode_hom_mappings[b.first];
+        int total_kmers = kmers_per_barcode[b.first];
+        int total_disagreeing_kmers = 0;
+        if(haplotype_barcode_disagree[winning_pair].find(b.first) != haplotype_barcode_disagree[winning_pair].end()){
+            total_disagreeing_kmers = haplotype_barcode_disagree[winning_pair][b.first];
+        }
+        // kmers mapping elsewhere is just total minus all others
+        int other = total_kmers - total_agreeing_kmers - total_hom_kmers - total_disagreeing_kmers;
+        out << b.first << ": " << total_agreeing_kmers << ", " << total_disagreeing_kmers << ", " << total_hom_kmers <<", " << other << ", " << total_kmers << std::endl;
+    }
+    // then need other barcodes which mapped usefully to this region but didn't support
+    out << "Barcodes mapping to this region that do not support winner:" << std::endl;
+    for (auto b: barcode_haplotype_mappings){
+        if (std::find(barcodes_seen.begin(), barcodes_seen.end(), b.first) == barcodes_seen.end()){
+            int total_agreeing_kmers = barcode_haplotype_mappings[b.first][std::get<0>(winning_pair)] + barcode_haplotype_mappings[b.first][std::get<1>(winning_pair)];
+            int total_hom_kmers = barcode_hom_mappings[b.first];
+            int total_kmers = kmers_per_barcode[b.first];
+            int total_disagreeing_kmers = 0;
+            if(haplotype_barcode_disagree[winning_pair].find(b.first) != haplotype_barcode_disagree[winning_pair].end()){
+                total_disagreeing_kmers = haplotype_barcode_disagree[winning_pair][b.first];
+            }
+            int other = total_kmers - total_agreeing_kmers - total_hom_kmers - total_disagreeing_kmers;
+            out << b.first << ": " << total_agreeing_kmers << ", " << total_disagreeing_kmers << ", " << total_hom_kmers <<", " << other << ", " << total_kmers << std::endl;
+        }
+    }
+}
+
+
 void HaplotypeScorer::add_barcode_vote(std::string barcode, std::string edge, int kmers){
     barcodes.insert(barcode);
     if (edge_haplotype_dict.find(edge) != edge_haplotype_dict.end()){
         // we only care about mappings to edges in bubbles, which will all have a key in the edge dict
         barcode_edge_mappings[barcode][edge] += kmers;
     } else if (std::find(graph.edges.begin(), graph.edges.end(), edge) != graph.edges.end()){
-        barcode_hom_mappings[barcode] += 1;
+        barcode_hom_mappings[barcode] += kmers;
     }
     kmers_per_barcode[barcode] += kmers;
 
