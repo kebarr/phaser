@@ -54,37 +54,151 @@ std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
     return haplotypes;
 }
 
+std::vector<std::pair<std::string, bool> > Graph::find_next_edges(std::vector<std::pair<std::string, bool> > edges_to_output, std::vector<std::string> edges_seen, std::vector<std::string> bubble_edges, std::set<std::pair<std::string, std::string> > links){
+    while(links.size() > 0){
+        for (auto link: links) {
+            std::string next_edge = std::get<0>(link);
+            std::string start_end = std::get<1>(link); // want to go from other end of this seq
+            std::string next_dir = switch_pm[start_end];
+            links = edge_list[std::make_pair(next_edge, next_dir)];
+            if (std::find(edges_seen.begin(), edges_seen.end(), next_edge) == edges_seen.end()) {
+                // all links are included in twice to make graph traversal easier - don't want to repeat
+                // if edge is in a bubble, it should be in bubble edges
+                if (std::find(edges_in_bubbles.begin(), edges_in_bubbles.end(), next_edge) != edges_in_bubbles.end()){
+                    if (std::find(bubble_edges.begin(), bubble_edges.end(), next_edge) != bubble_edges.end()){
+                        // add sequence to list to output, as we're going from start, it goes at the front
+                        // if its a + link, start of next_edge is joined to start of current edge, so reverse it
+                        if (start_end == "+"){
+                            edges_to_output.insert(edges_to_output.begin(), std::make_pair(next_edge, true));
+                        } else {
+                            edges_to_output.insert(edges_to_output.begin(), std::make_pair(next_edge, false));
+                        }
+                    }
+                } else {
+                    //if its not in a bubble, add it
+                    if (start_end == "+"){
+                        edges_to_output.insert(edges_to_output.begin(), std::make_pair(next_edge, true));
+                    } else {
+                        edges_to_output.insert(edges_to_output.begin(), std::make_pair(next_edge, false));
+                    }
+                }
+
+            }
+            edges_seen.push_back(next_edge);
+        }
+    }
+}
+
+
+void Graph::write_output_subgraph2(std::vector<std::string> bubble_edges, std::string output_file) {
+    std::vector<std::string> hom_edges;
+    for (auto edge:edges){
+        if (std::find(edges_in_bubbles.begin(), edges_in_bubbles.end(), edge) == edges_in_bubbles.end()){
+            hom_edges.push_back(edge);
+        }
+    }
+    std::vector < std::pair<std::pair<std::string, std::string> , std::set<std::pair<std::string, std::string> > > > edges_to_include;
+    // easier- just go through all links- if its a hom link, or included in bubble edges, take it
+    for (auto link:edge_list){
+        std::string e1_name = std::get<0>(link.first);
+        std::string e2_name = std::get<0>(link.first);
+        if (std::find(hom_edges.begin(), hom_edges.end(), e1_name) != hom_edges.end() && std::find(bubble_edges.begin(), bubble_edges.end(), e2_name) != bubble_edges.end()){
+            // then this link should be included
+            edges_to_include.push_back(link);
+        } else if (std::find(hom_edges.begin(), hom_edges.end(), e2_name) != hom_edges.end() && std::find(bubble_edges.begin(), bubble_edges.end(), e1_name) != bubble_edges.end()){
+            edges_to_include.push_back(link);
+
+        }
+    }
+    // to be able to output this as 1 contig, each edge should be joined once at end, once at start - except end ones
+    bool can_output = can_output_graph_sequence(edges_to_include);
+    std::vector<std::pair<std::string, bool> > edges_to_output;
+    if (can_output){
+        // need to order/orient contigs - know that apart from ends, each is joined to 1 only at each end
+        std::string current_contig =  std::get<0>(std::get<0>(edges_to_include[0]));
+        std::string current_contig_dir =  std::get<1>(std::get<0>(edges_to_include[0]));
+        edges_to_output.push_back(std::make_pair(current_contig, false));
+        // now just follow links from here, in right direction
+        std::set<std::pair<std::string, std::string> >  next_contig = std::get<1>(edges_to_include[0]);
+        while (next_contig.size() != 0 ){
+            for (auto contig: next_contig){
+                current_contig = std::get<0>(contig);
+                if (std::get<1>(contig) == current_contig_dir){ // then its start to end/end to start- don't reverse
+                    edges_to_output.push_back(std::make_pair(current_contig, false));
+                } else {
+                    edges_to_output.push_back(std::make_pair(current_contig, true));
+                }
+                // need to go from other end of contig
+                current_contig_dir = switch_pm[std::get<1>(contig)];
+
+            }
+            next_contig.clear();
+            for (auto l: edges_to_include){
+                if (std::get<0>(l) == std::make_pair(current_contig, current_contig_dir)){
+                    next_contig= std::get<1>(l);
+                }
+            }
+        }
+        std::string opposite_dir = switch_pm[std::get<1>(std::get<0>(edges_to_include[0]))];
+        next_contig.clear();
+        for (auto l: edges_to_include){
+            if (std::get<0>(l) == std::make_pair(std::get<0>(std::get<0>(edges_to_include[0])), opposite_dir)){
+                next_contig= std::get<1>(l);
+            }
+        }       
+
+    }
+}
+
+bool Graph::can_output_graph_sequence(std::vector < std::pair<std::pair<std::string, std::string> , std::set<std::pair<std::string, std::string> > > >  edges){
+    std::map<std::string, std::set<std::string> > edges_start;
+    std::map<std::string, std::set<std::string> > edges_end;
+    // edge dict replicates links- have from_link, from_start_end : to_link to_start_end
+    // avoid repetition by only going through dict keys
+    // need each edge joined to one contig at start, one contig at end
+    for (auto link:edges){
+        for (auto linked_to: std::get<1>(link)) {
+            if (std::get<1>(std::get<0>(link)) == "+") {
+                edges_end[std::get<0>(std::get<0>(link))].insert(std::get<0>(linked_to));
+            }
+            if (std::get<1>(std::get<0>(link)) == "-") {
+                edges_start[std::get<0>(std::get<0>(link))].insert(std::get<0>(linked_to));
+            }
+        }
+
+    }
+    for (auto e: edges_end){
+        if (e.second.size() > 1){
+            return false;
+        }
+    }
+    for (auto e: edges_start){
+        if (e.second.size() > 1){
+            return false;
+        }
+    }
+    return true;
+}
+
+
 void Graph::write_output_subgraph(std::vector<std::string> bubble_edges, std::string output_file) {
     // bubble edges are the edges we want to include, in weird order due to traversing from middle outwards
     // for each bubble edge, find edge its attached to front/back and build up sequence
     // as bubbles aren't guaranteed adjacent, will build up parts then stitch together
     std::vector<std::string> edges_seen;
+    // these should be in orde, bool is whether sequence is reversed or not
+    std::vector<std::pair<std::string, bool> > edges_to_output;
     std::string b = bubble_edges[0];
     // build up list of edges to link in end - start order -
     // start at arbitrary bubble, traverse from there building up list in order
     edges_seen.push_back(b);
     // assume we have beautiful bubble-contig-bubble-structure for now
     // so these are both length 0 or 1
-    std::set<std::pair<std::string, std::string> > links_start = edge_list[std::make_pair(b, "+")];
-    std::set<std::pair<std::string, std::string> > links_end = edge_list[std::make_pair(b, "-")];
+    std::set<std::pair<std::string, std::string> > links_start = edge_list[std::make_pair(b, "-")];
+    std::set<std::pair<std::string, std::string> > links_end = edge_list[std::make_pair(b, "+")];
     std::string seq = nodes[b];
     // should be max 1 each of links start and end, if we've reached end, can't go further
-    while(links_start.size() > 0){
-        for (auto link: links_start) {
-            std::string next_edge = std::get<0>(link);
-            links_start = edge_list[std::make_pair(link, "+")];
-            if (std::find(edges_seen.begin(), edges_seen.end(), next_edge) == edges_seen.end()) {
-                // all links are included in twice to make graph traversal easier - don't want to repeat
-                // if edge is in a bubble, it should be in bubble edges
-                if (std::find(edges_in_bubbles.begin(), edges_in_bubbles.end(), next_edge) != edges_in_bubbles.end()){
-                    if (std::find(bubble_edges.begin(), bubble_edges.end(), next_edge) != edges_in_bubbles.end()){
 
-                            }
-                        }
-                    }
-                    bubbles_seen.push_back(next_edge);
-                }
-            }
 
 
 }

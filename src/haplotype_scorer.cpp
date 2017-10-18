@@ -321,7 +321,7 @@ void HaplotypeScorer::decide_barcode_haplotype_support(){
 
 }
 
-void HaplotypeScorer::write_output_success(std::string output_file){
+void HaplotypeScorer::write_output_partial_success(std::string output_file){
     std::string o = "partial_" + output_file;// output is same for partial, just need to know somehow that were less confident
     write_output_success(o);
 }
