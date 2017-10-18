@@ -90,7 +90,7 @@ std::vector<std::pair<std::string, bool> > Graph::find_next_edges(std::vector<st
 }
 
 
-void Graph::write_output_subgraph2(std::vector<std::string> bubble_edges, std::string output_file, std::string sequence_name) {
+void Graph::write_output_subgraph(std::vector<std::string> bubble_edges, std::string output_file, std::string sequence_name) {
     std::vector<std::string> hom_edges;
     for (auto edge:edges){
         if (std::find(edges_in_bubbles.begin(), edges_in_bubbles.end(), edge) == edges_in_bubbles.end()){
@@ -135,10 +135,9 @@ void Graph::write_output_subgraph2(std::vector<std::string> bubble_edges, std::s
                     edges_to_output.push_back(std::make_pair(edge_name, true));
                 }
             next_edge = edges_to_include[edge_leaving_other_way[0]];
-            e = next_edge[0];
-            edge_name = std::get<0>(e);
+            edge_name = std::get<0>(next_edge[0]);
             previous_dir = current_dir;
-            current_dir = std::get<1>(e);
+            current_dir = std::get<1>(next_edge[0]);
             edge_leaving_other_way = edges_to_include[std::make_pair(edge_name, switch_pm[current_dir])];
             }
         write_sequences_to_file(output_file, sequence_name, edges_to_output);
@@ -169,6 +168,7 @@ std::pair<std::string, std::string> Graph::find_start_edge(std::map < std::pair<
     }
     return std::make_pair("","");
 }
+
 bool Graph::can_output_graph_sequence(std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > >  edges){
     std::map<std::string, std::set<std::string> > edges_start;
     std::map<std::string, std::set<std::string> > edges_end;
@@ -183,35 +183,11 @@ bool Graph::can_output_graph_sequence(std::map < std::pair<std::string, std::str
             if (std::get<1>(link.first) == "+") {// links joined to the end of this
                 std::string edge_from = std::get<0>(link.first);
                 edges_end[edge_from].insert(std::get<0>(linked_to));
-                if (link_position_dict.find(edge_from) != link_position_dict.end()){
-                    //if we've already linked this, should have index
-                    current_index = link_position_dict[edge_from];
-                } else {
-                    // if we haven't already linked this, or the edge its linked to, no idea where to put it
-                    current_index = 0;
-                }
-                edges_to_output.insert(edges_to_output.begin()+ current_index, std::make_pair(edge_from, false));
-                link_position_dict[edge_from] = current_index;
-                current_index += 1;
-                if (std::get<1>(linked_to) == "+"){ // if its plus then start of link is joined to end of previos, so don't reverse
-                    edges_to_output.insert(edges_to_output.begin()+ current_index, std::make_pair(std::get<0>(std::get<0>(linked_to)), false));
-
-                } else {
-                    edges_to_output.insert(edges_to_output.begin()+ current_index, std::make_pair(std::get<0>(std::get<0>(linked_to)), true));
-
-                }
-                link_position_dict[std::get<0>(std::get<0>(linked_to)] = current_index;
             }
             if (std::get<1>(link.first) == "-") { // links joined to start of this - so go before it in list
                 std::string edge_from = std::get<0>(link.first);
                 edges_start[std::get<0>(std::get<0>(link))].insert(std::get<0>(linked_to));
-                if (std::get<1>(linked_to) == "+"){ // if its plus then start of link is joined to start of previos, so reverse
-                    edges_to_output.insert(edges_to_output.begin()+ current_index, std::make_pair(std::get<0>(std::get<0>(link)), true));
 
-                } else {
-                    edges_to_output.insert(edges_to_output.begin()+ current_index, std::make_pair(std::get<0>(std::get<0>(link)), false));
-
-                }
             }
         }
 
@@ -229,28 +205,6 @@ bool Graph::can_output_graph_sequence(std::map < std::pair<std::string, std::str
     return true;
 }
 
-
-void Graph::write_output_subgraph(std::vector<std::string> bubble_edges, std::string output_file) {
-    // bubble edges are the edges we want to include, in weird order due to traversing from middle outwards
-    // for each bubble edge, find edge its attached to front/back and build up sequence
-    // as bubbles aren't guaranteed adjacent, will build up parts then stitch together
-    std::vector<std::string> edges_seen;
-    // these should be in orde, bool is whether sequence is reversed or not
-    std::vector<std::pair<std::string, bool> > edges_to_output;
-    std::string b = bubble_edges[0];
-    // build up list of edges to link in end - start order -
-    // start at arbitrary bubble, traverse from there building up list in order
-    edges_seen.push_back(b);
-    // assume we have beautiful bubble-contig-bubble-structure for now
-    // so these are both length 0 or 1
-    std::set<std::pair<std::string, std::string> > links_start = edge_list[std::make_pair(b, "-")];
-    std::set<std::pair<std::string, std::string> > links_end = edge_list[std::make_pair(b, "+")];
-    std::string seq = nodes[b];
-    // should be max 1 each of links start and end, if we've reached end, can't go further
-
-
-
-}
 void Graph::load_gfa(std::string infile_name){
     std::ifstream infile(infile_name);
     std::string line;

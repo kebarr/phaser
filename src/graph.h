@@ -40,8 +40,7 @@ public:
     bool can_output_graph_sequence(std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > > );
     void load_gfa(std::string);
     // easiest way to actually get phase string is get output sub gfa for each haplotype and stitch together
-    void write_output_subgraph(std::vector<std::string>, std::string) ;
-    void write_output_subgraph2(std::vector<std::string> , std::string, std::string  );
+    void write_output_subgraph(std::vector<std::string> , std::string, std::string  );
     std::pair<std::string, std::string> find_start_edge(std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > >  );
 
     void write_sequences_to_file(std::string , std::string,std::vector<std::pair<std::string, bool> > );
