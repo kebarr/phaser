@@ -90,24 +90,28 @@ std::vector<std::pair<std::string, bool> > Graph::find_next_edges(std::vector<st
 }
 
 
-void Graph::write_output_subgraph2(std::vector<std::string> bubble_edges, std::string output_file) {
+void Graph::write_output_subgraph2(std::vector<std::string> bubble_edges, std::string output_file, std::string sequence_name) {
     std::vector<std::string> hom_edges;
     for (auto edge:edges){
         if (std::find(edges_in_bubbles.begin(), edges_in_bubbles.end(), edge) == edges_in_bubbles.end()){
             hom_edges.push_back(edge);
         }
     }
-    std::vector < std::pair<std::pair<std::string, std::string> , std::set<std::pair<std::string, std::string> > > > edges_to_include;
+    std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > > edges_to_include;
     // easier- just go through all links- if its a hom link, or included in bubble edges, take it
     for (auto link:edge_list){
         std::string e1_name = std::get<0>(link.first);
-        std::string e2_name = std::get<0>(link.first);
-        if (std::find(hom_edges.begin(), hom_edges.end(), e1_name) != hom_edges.end() && std::find(bubble_edges.begin(), bubble_edges.end(), e2_name) != bubble_edges.end()){
-            // then this link should be included
-            edges_to_include.push_back(link);
-        } else if (std::find(hom_edges.begin(), hom_edges.end(), e2_name) != hom_edges.end() && std::find(bubble_edges.begin(), bubble_edges.end(), e1_name) != bubble_edges.end()){
-            edges_to_include.push_back(link);
+        for (auto joined_to: link.second) {
+            std::string e2_name = std::get<0>(joined_to);
+            if (std::find(hom_edges.begin(), hom_edges.end(), e1_name) != hom_edges.end() &&
+                std::find(bubble_edges.begin(), bubble_edges.end(), e2_name) != bubble_edges.end()) {
+                // then this link should be included
+                edges_to_include[link.first].push_back(joined_to);
+            } else if (std::find(hom_edges.begin(), hom_edges.end(), e2_name) != hom_edges.end() &&
+                       std::find(bubble_edges.begin(), bubble_edges.end(), e1_name) != bubble_edges.end()) {
+                edges_to_include[link.first].push_back(joined_to);
 
+            }
         }
     }
     // to be able to output this as 1 contig, each edge should be joined once at end, once at start - except end ones
@@ -115,54 +119,99 @@ void Graph::write_output_subgraph2(std::vector<std::string> bubble_edges, std::s
     std::vector<std::pair<std::string, bool> > edges_to_output;
     if (can_output){
         // need to order/orient contigs - know that apart from ends, each is joined to 1 only at each end
-        std::string current_contig =  std::get<0>(std::get<0>(edges_to_include[0]));
-        std::string current_contig_dir =  std::get<1>(std::get<0>(edges_to_include[0]));
-        edges_to_output.push_back(std::make_pair(current_contig, false));
-        // now just follow links from here, in right direction
-        std::set<std::pair<std::string, std::string> >  next_contig = std::get<1>(edges_to_include[0]);
-        while (next_contig.size() != 0 ){
-            for (auto contig: next_contig){
-                current_contig = std::get<0>(contig);
-                if (std::get<1>(contig) == current_contig_dir){ // then its start to end/end to start- don't reverse
-                    edges_to_output.push_back(std::make_pair(current_contig, false));
-                } else {
-                    edges_to_output.push_back(std::make_pair(current_contig, true));
+        // ok, try again, find one of end contigs and just go along
+        auto start_edge = find_start_edge(edges_to_include);
+        auto previous_dir = std::get<1>(start_edge);
+        std::vector<std::pair<std::string, std::string> > next_edge = edges_to_include[std::make_pair(std::get<0>(start_edge), switch_pm[previous_dir])];
+        edges_to_output.push_back(std::make_pair(std::get<0>(start_edge), false));
+        auto e =  next_edge[0]; // seems really dumb to use a for loop to access a single element
+        auto edge_name = std::get<0>(e);
+        std::string current_dir = std::get<1>(e);
+        auto edge_leaving_other_way = edges_to_include[std::make_pair(edge_name, switch_pm[current_dir])];
+        while (edge_leaving_other_way.size() != 0) {
+            if (current_dir == previous_dir) {
+                edges_to_output.push_back(std::make_pair(edge_name, false));
+            } else {
+                    edges_to_output.push_back(std::make_pair(edge_name, true));
                 }
-                // need to go from other end of contig
-                current_contig_dir = switch_pm[std::get<1>(contig)];
+            next_edge = edges_to_include[edge_leaving_other_way[0]];
+            e = next_edge[0];
+            edge_name = std::get<0>(e);
+            previous_dir = current_dir;
+            current_dir = std::get<1>(e);
+            edge_leaving_other_way = edges_to_include[std::make_pair(edge_name, switch_pm[current_dir])];
+            }
+        write_sequences_to_file(output_file, sequence_name, edges_to_output);
 
-            }
-            next_contig.clear();
-            for (auto l: edges_to_include){
-                if (std::get<0>(l) == std::make_pair(current_contig, current_contig_dir)){
-                    next_contig= std::get<1>(l);
-                }
-            }
-        }
-        std::string opposite_dir = switch_pm[std::get<1>(std::get<0>(edges_to_include[0]))];
-        next_contig.clear();
-        for (auto l: edges_to_include){
-            if (std::get<0>(l) == std::make_pair(std::get<0>(std::get<0>(edges_to_include[0])), opposite_dir)){
-                next_contig= std::get<1>(l);
-            }
-        }       
 
     }
 }
 
-bool Graph::can_output_graph_sequence(std::vector < std::pair<std::pair<std::string, std::string> , std::set<std::pair<std::string, std::string> > > >  edges){
+void Graph::write_sequences_to_file(std::string output_filename, std::string sequence_name, std::vector<std::pair<std::string, bool> > edges_to_output){
+    std::string sequence;
+    for (auto edge: edges_to_output){
+        auto seq = nodes[std::get<0>(edge)];
+        if (std::get<1>(edge)){
+            std::reverse(seq.begin(), seq.end());
+        }
+        sequence = sequence + seq;
+    }
+    std::ofstream out(output_filename);
+    out << ">" << sequence_name << std::endl << sequence << std::endl;
+}
+
+std::pair<std::string, std::string> Graph::find_start_edge(std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > >  edges){
+    for (auto e: edges){
+        if (e.second.size() == 0){
+            std::pair<std::string, std::string> start_edge = std::make_pair(std::get<0>(e.first), std::get<1>(e.first));
+            return start_edge;
+        }
+    }
+    return std::make_pair("","");
+}
+bool Graph::can_output_graph_sequence(std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > >  edges){
     std::map<std::string, std::set<std::string> > edges_start;
     std::map<std::string, std::set<std::string> > edges_end;
     // edge dict replicates links- have from_link, from_start_end : to_link to_start_end
     // avoid repetition by only going through dict keys
     // need each edge joined to one contig at start, one contig at end
+    std::vector<std::pair<std::string, bool> > edges_to_output;
+    std::map<std::string, int> link_position_dict;
+    int current_index = 0;
     for (auto link:edges){
-        for (auto linked_to: std::get<1>(link)) {
-            if (std::get<1>(std::get<0>(link)) == "+") {
-                edges_end[std::get<0>(std::get<0>(link))].insert(std::get<0>(linked_to));
+        for (auto linked_to: link.second) {
+            if (std::get<1>(link.first) == "+") {// links joined to the end of this
+                std::string edge_from = std::get<0>(link.first);
+                edges_end[edge_from].insert(std::get<0>(linked_to));
+                if (link_position_dict.find(edge_from) != link_position_dict.end()){
+                    //if we've already linked this, should have index
+                    current_index = link_position_dict[edge_from];
+                } else {
+                    // if we haven't already linked this, or the edge its linked to, no idea where to put it
+                    current_index = 0;
+                }
+                edges_to_output.insert(edges_to_output.begin()+ current_index, std::make_pair(edge_from, false));
+                link_position_dict[edge_from] = current_index;
+                current_index += 1;
+                if (std::get<1>(linked_to) == "+"){ // if its plus then start of link is joined to end of previos, so don't reverse
+                    edges_to_output.insert(edges_to_output.begin()+ current_index, std::make_pair(std::get<0>(std::get<0>(linked_to)), false));
+
+                } else {
+                    edges_to_output.insert(edges_to_output.begin()+ current_index, std::make_pair(std::get<0>(std::get<0>(linked_to)), true));
+
+                }
+                link_position_dict[std::get<0>(std::get<0>(linked_to)] = current_index;
             }
-            if (std::get<1>(std::get<0>(link)) == "-") {
+            if (std::get<1>(link.first) == "-") { // links joined to start of this - so go before it in list
+                std::string edge_from = std::get<0>(link.first);
                 edges_start[std::get<0>(std::get<0>(link))].insert(std::get<0>(linked_to));
+                if (std::get<1>(linked_to) == "+"){ // if its plus then start of link is joined to start of previos, so reverse
+                    edges_to_output.insert(edges_to_output.begin()+ current_index, std::make_pair(std::get<0>(std::get<0>(link)), true));
+
+                } else {
+                    edges_to_output.insert(edges_to_output.begin()+ current_index, std::make_pair(std::get<0>(std::get<0>(link)), false));
+
+                }
             }
         }
 
