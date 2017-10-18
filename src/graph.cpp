@@ -54,7 +54,40 @@ std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
     return haplotypes;
 }
 
+void Graph::write_output_subgraph(std::vector<std::string> bubble_edges, std::string output_file) {
+    // bubble edges are the edges we want to include, in weird order due to traversing from middle outwards
+    // for each bubble edge, find edge its attached to front/back and build up sequence
+    // as bubbles aren't guaranteed adjacent, will build up parts then stitch together
+    std::vector<std::string> edges_seen;
+    std::string b = bubble_edges[0];
+    // build up list of edges to link in end - start order -
+    // start at arbitrary bubble, traverse from there building up list in order
+    edges_seen.push_back(b);
+    // assume we have beautiful bubble-contig-bubble-structure for now
+    // so these are both length 0 or 1
+    std::set<std::pair<std::string, std::string> > links_start = edge_list[std::make_pair(b, "+")];
+    std::set<std::pair<std::string, std::string> > links_end = edge_list[std::make_pair(b, "-")];
+    std::string seq = nodes[b];
+    // should be max 1 each of links start and end, if we've reached end, can't go further
+    while(links_start.size() > 0){
+        for (auto link: links_start) {
+            std::string next_edge = std::get<0>(link);
+            links_start = edge_list[std::make_pair(link, "+")];
+            if (std::find(edges_seen.begin(), edges_seen.end(), next_edge) == edges_seen.end()) {
+                // all links are included in twice to make graph traversal easier - don't want to repeat
+                // if edge is in a bubble, it should be in bubble edges
+                if (std::find(edges_in_bubbles.begin(), edges_in_bubbles.end(), next_edge) != edges_in_bubbles.end()){
+                    if (std::find(bubble_edges.begin(), bubble_edges.end(), next_edge) != edges_in_bubbles.end()){
 
+                            }
+                        }
+                    }
+                    bubbles_seen.push_back(next_edge);
+                }
+            }
+
+
+}
 void Graph::load_gfa(std::string infile_name){
     std::ifstream infile(infile_name);
     std::string line;
@@ -77,6 +110,8 @@ void Graph::load_gfa(std::string infile_name){
             //std::pair<std::string, std::string> inverse_link = std::make_pair(fields[3], switch_pm[fields[4]]);
             edge_list[inverse_link].insert(value_bwd);
             counter +=1;
+        } else if (fields[0] == "S"){
+            nodes[fields[2]] = fields[3];
         }
     }
     std::cout << "Loaded GFA with " << counter << " links" << edge_list.size()<<std::endl;
@@ -138,6 +173,9 @@ void Graph::traverse_graph(std::string start_node, std::string in_dir, std::vect
         if (std::get<0>(contig_other_end_bubble) != "" & std::get<1>(contig_other_end_bubble) != ""){
             //!!!!!! not enforcing bubble degree, but this assumes deg 2....
             //std::cout << "adding bubble " << std::get<0>(adjacent_nodes_vector[0]) << " : " << std::get<0>(adjacent_nodes_vector[1]) << std::endl;
+            // really lazy but easiest way to check if edge is hom/het for output
+            edges_in_bubbles.push_back(std::get<0>(adjacent_nodes_vector[0]));
+            edges_in_bubbles.push_back(std::get<0>(adjacent_nodes_vector[1]));
             bubbles.push_back(std::make_pair(std::get<0>(adjacent_nodes_vector[0]), std::get<0>(adjacent_nodes_vector[1])));
                     /// continue traversing from other end of bubble
             traverse_graph(std::get<0>(contig_other_end_bubble), switch_pm[std::get<1>(contig_other_end_bubble)], traversed_edge_list);
