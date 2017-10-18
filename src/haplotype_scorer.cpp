@@ -326,7 +326,7 @@ void HaplotypeScorer::write_output_partial_success(std::string output_file){
     write_output_success(o);
 }
 void HaplotypeScorer::write_output_success(std::string output_file){
-    std::ofstream out(output_file);
+    std::ofstream out(output_file + ".txt");
     std::vector<std::string> winner1 = std::get<0>(winners);
     std::vector<std::string> winner2 = std::get<1>(winners);
     out << "Haplotype 1: " << std::endl;

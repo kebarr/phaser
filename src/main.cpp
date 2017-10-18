@@ -133,14 +133,14 @@ int main(int argc, char **argv) {
         // if we've picked a winner
         if (success == 0) {
             haplotype_scorer.write_output_success(output_file);
-            graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "sequences1" + output_file, "haplotype1");
-            graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "sequences2" + output_file, "haplotype2");
+            graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "sequences1" + output_file + ".gfa", "haplotype1");
+            graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "sequences2" + output_file+ ".gfa", "haplotype2");
 
         } else if (success == 1) { // if we're less confident about winner
             haplotype_scorer.write_output_partial_success(output_file);
-            graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "partial_sequences1" + output_file,
+            graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "partial_sequences1" + output_file+ ".gfa",
                                         "haplotype1");
-            graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "partial_sequences2" + output_file,
+            graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "partial_sequences2" + output_file+ ".gfa",
                                         "haplotype2");
 
         }
