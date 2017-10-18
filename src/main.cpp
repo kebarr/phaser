@@ -120,6 +120,8 @@ int main(int argc, char **argv) {
     //for (auto l:graph.bubbles){
     //    std::cout << std::get<0>(l) << " " << std::get<1>(l) << std::endl;
     //}
+    std::vector<std::string > bubble_edges = {"375198", "727706", "1106952", "895182", "1098124", "1556971", "1868111", "328318", "1895313", "1497330", "1300374", "208218", "1415796"};
+    graph.write_output_subgraph(bubble_edges, "test_seq_output.txt", "seq1");
     std::vector<std::vector <std::string> > possible_haplotypes = graph.calculate_possible_haplotypes();
     std::cout<< "found " << possible_haplotypes.size() << "candidate haplotypes of length " << possible_haplotypes[0].size() << std::endl;
     std::cout<<  "loading " << mappings_filename << std::endl;
