@@ -39,6 +39,8 @@ public:
     Graph graph;
     HaplotypeScorer(std::string, std::vector<std::vector <std::string> >, Graph);
     void load_mappings();
+
+    void load_mappings_from_dict(std::map<std::string, std::map<std::string, int> > &);
     void decide_barcode_haplotype_support();
     int max_overall_pair_support;
     int mean_overall_pair_support;

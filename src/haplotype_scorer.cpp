@@ -385,6 +385,15 @@ void HaplotypeScorer::add_barcode_vote(std::string barcode, std::string edge, in
     kmers_per_barcode[barcode] += kmers;
 
 }
+
+void HaplotypeScorer::load_mappings_from_dict(std::map<std::string, std::map<std::string, int> > & mappings) {
+    for (auto edge:graph.edges){
+        for (auto barcode: mappings[edge]){
+            add_barcode_vote(barcode.first, edge, barcode.second);
+        }
+    }
+}
+
 void HaplotypeScorer::load_mappings() {
     std::ifstream infile(mapping_filename);
     std::string line;

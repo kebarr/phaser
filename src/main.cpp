@@ -43,20 +43,38 @@ bool check_or_create_directory(std::string &output_prefix) {
     return validate_dir;
 }
 
+std::map<std::string, std::map<std::string, int> > load_mappings(std::string mapping_filename) {
+    std::ifstream infile(mapping_filename);
+    std::string line;
+    std::string fields[3];
+    std::string barcode;
+    int counter = 0;
+    std::cout << "Loading mappings file " << mapping_filename << std::endl;
+    std::map<std::string, std::map<std::string, int> > mappings;
+    while (std::getline(infile, line)){
+        // read name, contig, number of kmers
+        std::istringstream(line) >> fields[0] >> fields[1] >> fields[2] ;
+        barcode = fields[0].substr(fields[0].find("_") + 1);
+        mappings[fields[2]][barcode] += std::stoi(fields[1]);
+        counter += 1;
+
+    }
+    std::cout << "Loaded " << counter << " mappings  " << std::endl;
+    return mappings;
+}
+
 int main(int argc, char **argv) {
 
     const unsigned int GB(1024 * 1024 * 1024);
     unsigned int mem_limit(10);
 
-    std::string graph_filename;
+    std::string graph_file_list;
     std::string mappings_filename;
-    std::string start_edge;
-    std::string output_file;
+    std::string output_file_pref;
 
-    graph_filename = argv[1];
-    start_edge = argv[2];
-    mappings_filename = argv[3];
-    output_file = argv[4];
+    graph_file_list = argv[1];
+    mappings_filename = argv[2];
+    output_file_pref = argv[3];
     /*try {
         std::time_t t = std::time(nullptr);
         std::tm tm = *std::localtime(&t);
@@ -105,45 +123,67 @@ int main(int argc, char **argv) {
         std::cout << "error parsing options: " << e.what() << std::endl;
         exit(1);
     }*/
-    std::cout << "----------------------------------------" <<std::endl;
-    std::cout << "Phasing GFA: " << graph_filename << std::endl;
-    Graph graph=Graph();
-    graph.load_gfa(graph_filename);
-    std::cout << "Traversing from start edge " << start_edge << " in + direction" << std::endl;
-    std::vector<std::string > traversed_edge_list;
-    graph.traverse_graph(start_edge, "+", traversed_edge_list);
-    std::cout << "Found " << graph.bubbles.size() << " bubbles from + direction" << std::endl;
-    std::cout << "Traversing from start edge " << start_edge << " in - direction" << std::endl;
-    traversed_edge_list.clear();
-    graph.traverse_graph(start_edge, "-", traversed_edge_list);
+    // actually should do it with choice of single gfa or mapping file list
+    // loading entire mappings file each time takes ages- better strategy is to lload whole thing
+    // take list of gfas, and loop from in here
+    std::map<std::string, std::map<std::string, int> > mappings = load_mappings(mappings_filename);
+    std::string graph_filename;
+    std::string start_edge;
+    std::string fields[2];
+    std::string line;
+    std::ifstream infile(graph_file_list);
+    // this should be a oarallel for
+    while (std::getline(infile, line)) {
+        std::istringstream(line) >> fields[0] >> fields[1];
+        graph_filename = fields[0];
+        start_edge = fields[1];
+        std::cout << "----------------------------------------" << std::endl;
+        std::cout << "Phasing GFA: " << graph_filename << std::endl;
+        std::string filename = graph_filename.substr(graph_filename.find(".gfa"));
+        std::string output_file = output_file_pref + filename;
+        Graph graph = Graph();
+        graph.load_gfa(graph_filename);
+        std::cout << "Traversing from start edge " << start_edge << " in + direction" << std::endl;
+        std::vector<std::string> traversed_edge_list;
+        graph.traverse_graph(start_edge, "+", traversed_edge_list);
+        std::cout << "Found " << graph.bubbles.size() << " bubbles from + direction" << std::endl;
+        std::cout << "Traversing from start edge " << start_edge << " in - direction" << std::endl;
+        traversed_edge_list.clear();
+        graph.traverse_graph(start_edge, "-", traversed_edge_list);
 
-    std::cout << "Found " << graph.bubbles.size() << " bubbles  in total" << std::endl;
-    //for (auto l:graph.bubbles){
-    //    std::cout << std::get<0>(l) << " " << std::get<1>(l) << std::endl;
-    //}
-    if (graph.bubbles.size() > 1) {
-        std::vector<std::vector<std::string> > possible_haplotypes = graph.calculate_possible_haplotypes();
-        std::cout << "found " << possible_haplotypes.size() << "candidate haplotypes of length "
-                  << possible_haplotypes[0].size() << std::endl;
-        std::cout << "loading " << mappings_filename << std::endl;
-        HaplotypeScorer haplotype_scorer = HaplotypeScorer(mappings_filename, possible_haplotypes, graph);
-        haplotype_scorer.load_mappings();
-        haplotype_scorer.decide_barcode_haplotype_support();
-        int success = haplotype_scorer.score_haplotypes();
-        // if we've picked a winner
-        if (success == 0) {
-            haplotype_scorer.write_output_success(output_file);
-            graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "sequences1" + output_file + ".gfa", "haplotype1");
-            graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "sequences2" + output_file+ ".gfa", "haplotype2");
+        std::cout << "Found " << graph.bubbles.size() << " bubbles  in total" << std::endl;
+        if (graph.bubbles.size() > 1) {
+            std::vector<std::vector<std::string> > possible_haplotypes = graph.calculate_possible_haplotypes();
+            std::cout << "found " << possible_haplotypes.size() << "candidate haplotypes of length "
+                      << possible_haplotypes[0].size() << std::endl;
+            std::cout << "loading " << mappings_filename << std::endl;
+            HaplotypeScorer haplotype_scorer = HaplotypeScorer(mappings_filename, possible_haplotypes, graph);
+            haplotype_scorer.load_mappings_from_dict(mappings);
+            haplotype_scorer.decide_barcode_haplotype_support();
+            int success = haplotype_scorer.score_haplotypes();
+            // if we've picked a winner
+            if (success == 0) {
+                haplotype_scorer.write_output_success(output_file);
+                graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "sequences1" + output_file + ".gfa",
+                                            "haplotype1");
+                graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "sequences2" + output_file + ".gfa",
+                                            "haplotype2");
 
-        } else if (success == 1) { // if we're less confident about winner
-            haplotype_scorer.write_output_partial_success(output_file);
-            graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "partial_sequences1" + output_file+ ".gfa",
-                                        "haplotype1");
-            graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "partial_sequences2" + output_file+ ".gfa",
-                                        "haplotype2");
+            } else if (success == 1) { // if we're less confident about winner
+                haplotype_scorer.write_output_partial_success(output_file);
+                graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners),
+                                            "partial_sequences1" + output_file + ".gfa",
+                                            "haplotype1");
+                graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners),
+                                            "partial_sequences2" + output_file + ".gfa",
+                                            "haplotype2");
 
+            }
         }
+        std::cout << "----------------------------------------" << std::endl;
+        std::cout <<std::endl;
+        std::cout <<std::endl;
+        std::cout <<std::endl;
     }
     return 0;
 }
