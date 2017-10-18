@@ -105,7 +105,8 @@ int main(int argc, char **argv) {
         std::cout << "error parsing options: " << e.what() << std::endl;
         exit(1);
     }*/
-
+    std::cout << "----------------------------------------" <<std::endl;
+    std::cout << "Phasing GFA: " << graph_filename << std::endl;
     Graph graph=Graph();
     graph.load_gfa(graph_filename);
     std::cout << "Traversing from start edge " << start_edge << " in + direction" << std::endl;
@@ -120,21 +121,29 @@ int main(int argc, char **argv) {
     //for (auto l:graph.bubbles){
     //    std::cout << std::get<0>(l) << " " << std::get<1>(l) << std::endl;
     //}
-    std::vector<std::string > bubble_edges = {"375198", "727706", "1106952", "895182", "1098124", "1556971", "1868111", "328318", "1895313", "1497330", "1300374", "208218", "1415796"};
-    graph.write_output_subgraph(bubble_edges, "test_seq_output.txt", "seq1");
-    std::vector<std::vector <std::string> > possible_haplotypes = graph.calculate_possible_haplotypes();
-    std::cout<< "found " << possible_haplotypes.size() << "candidate haplotypes of length " << possible_haplotypes[0].size() << std::endl;
-    std::cout<<  "loading " << mappings_filename << std::endl;
-    HaplotypeScorer haplotype_scorer = HaplotypeScorer(mappings_filename, possible_haplotypes, graph);
-    haplotype_scorer.load_mappings();
-    haplotype_scorer.decide_barcode_haplotype_support();
-    int success  = haplotype_scorer.score_haplotypes();
-    // if we've picked a winner
-    if (success == 0) {
-        haplotype_scorer.write_output_success(output_file);
+    if (graph.bubbles.size() > 1) {
+        std::vector<std::vector<std::string> > possible_haplotypes = graph.calculate_possible_haplotypes();
+        std::cout << "found " << possible_haplotypes.size() << "candidate haplotypes of length "
+                  << possible_haplotypes[0].size() << std::endl;
+        std::cout << "loading " << mappings_filename << std::endl;
+        HaplotypeScorer haplotype_scorer = HaplotypeScorer(mappings_filename, possible_haplotypes, graph);
+        haplotype_scorer.load_mappings();
+        haplotype_scorer.decide_barcode_haplotype_support();
+        int success = haplotype_scorer.score_haplotypes();
+        // if we've picked a winner
+        if (success == 0) {
+            haplotype_scorer.write_output_success(output_file);
+            graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "sequences1" + output_file, "haplotype1");
+            graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "sequences2" + output_file, "haplotype2");
 
-    } else if (success == 1){ // if we're less confident about winner
-        haplotype_scorer.write_output_partial_success(output_file);
+        } else if (success == 1) { // if we're less confident about winner
+            haplotype_scorer.write_output_partial_success(output_file);
+            graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "partial_sequences1" + output_file,
+                                        "haplotype1");
+            graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "partial_sequences2" + output_file,
+                                        "haplotype2");
+
+        }
     }
     return 0;
 }

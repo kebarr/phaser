@@ -339,6 +339,7 @@ void HaplotypeScorer::write_output_success(std::string output_file){
         out << h << " ";
     }
     out << std::endl;
+    out << "Overall support for pair: " << max_overall_pair_support << " mean:" << mean_overall_pair_support <<std::endl;
     out << "Barcodes supporting winner:" << std::endl;
     std::vector<std::string> barcodes_seen;
     // need barcodes supporting this pair- to outputm for each barcode, total kmers, kmers agreeing, kmers disagreeing, kmers to hom parts, other
