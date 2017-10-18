@@ -28,12 +28,17 @@ private:
     std::vector<int>  winner_for_barcode(std::string barcode);
 
 public:
+    std::map<std::pair< int, int > , std::map<std::string, int > > haplotype_barcode_agree;
+    std::map<std::pair< int, int > , std::map<std::string, int > > haplotype_barcode_disagree;
+    std::map<std::string,  int> barcode_hom_mappings;
+    std::map<std::string, int > kmers_per_barcode;
+    std::set <std::string> barcodes;
     std::string mapping_filename;
     Graph graph;
     HaplotypeScorer(std::string, std::vector<std::vector <std::string> >, Graph);
     void load_mappings();
     void decide_barcode_haplotype_support();
-    std::pair<std::vector<std::string>,std::vector<std::string> > score_haplotypes();
+    std::pair< std::pair<int, int>, std::pair<std::vector<std::string>,std::vector<std::string> > > score_haplotypes();
 };
 
 

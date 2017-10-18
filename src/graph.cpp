@@ -137,7 +137,7 @@ void Graph::traverse_graph(std::string start_node, std::string in_dir, std::vect
         std::pair<std::string, std::string> contig_other_end_bubble = check_bubble(node, adjacent_nodes_vector);
         if (std::get<0>(contig_other_end_bubble) != "" & std::get<1>(contig_other_end_bubble) != ""){
             //!!!!!! not enforcing bubble degree, but this assumes deg 2....
-            std::cout << "adding bubble " << std::get<0>(adjacent_nodes_vector[0]) << " : " << std::get<0>(adjacent_nodes_vector[1]) << std::endl;
+            //std::cout << "adding bubble " << std::get<0>(adjacent_nodes_vector[0]) << " : " << std::get<0>(adjacent_nodes_vector[1]) << std::endl;
             bubbles.push_back(std::make_pair(std::get<0>(adjacent_nodes_vector[0]), std::get<0>(adjacent_nodes_vector[1])));
                     /// continue traversing from other end of bubble
             traverse_graph(std::get<0>(contig_other_end_bubble), switch_pm[std::get<1>(contig_other_end_bubble)], traversed_edge_list);

@@ -56,6 +56,7 @@ int main(int argc, char **argv) {
     graph_filename = argv[1];
     start_edge = argv[2];
     mappings_filename = argv[3];
+    output_file = argv[4];
     /*try {
         std::time_t t = std::time(nullptr);
         std::tm tm = *std::localtime(&t);
@@ -116,21 +117,31 @@ int main(int argc, char **argv) {
     graph.traverse_graph(start_edge, "-", traversed_edge_list);
 
     std::cout << "Found " << graph.bubbles.size() << " bubbles  in total" << std::endl;
-    for (auto l:graph.bubbles){
-        std::cout << std::get<0>(l) << " " << std::get<1>(l) << std::endl;
-    }
+    //for (auto l:graph.bubbles){
+    //    std::cout << std::get<0>(l) << " " << std::get<1>(l) << std::endl;
+    //}
     std::vector<std::vector <std::string> > possible_haplotypes = graph.calculate_possible_haplotypes();
     std::cout<< "found " << possible_haplotypes.size() << "candidate haplotypes of length " << possible_haplotypes[0].size() << std::endl;
-    for (auto h: possible_haplotypes){
-        for (auto i:h){
-            std::cout << i << " ";
-        }
-        std::cout << std::endl;
-    }
     std::cout<<  "loading " << mappings_filename << std::endl;
     HaplotypeScorer haplotype_scorer = HaplotypeScorer(mappings_filename, possible_haplotypes, graph);
     haplotype_scorer.load_mappings();
     haplotype_scorer.decide_barcode_haplotype_support();
-    std::pair<std::vector<std::string>,std::vector<std::string> >  winners  = haplotype_scorer.score_haplotypes();
+    std::pair< std::pair<int, int>, std::pair<std::vector<std::string>,std::vector<std::string> > > winners  = haplotype_scorer.score_haplotypes();
+    std::pair<int, int> winning_pair = std::get<0>(winners);
+    // if we've picked a winner
+    if (std::get<0>(winning_pair) != 0 && std::get<1>(winning_pair) != 0 ) {
+        std::ofstream out(output_file);
+        std::vector<std::string> winner1 = std::get<0>(std::get<1>(winners));
+        std::vector<std::string> winner2 = std::get<1>(std::get<1>(winners));
+        // need barcodes supporting this pair- to outputm for each barcode, total kmers, kmers agreeing, kmers disagreeing, kmers to hom parts, other
+        for (auto b:haplotype_scorer.haplotype_barcode_agree[winning_pair]){
+            int total_agreeing_kmers = b.second;
+            int total_hom_kmers = haplotype_scorer.
+            int total_disagreeing_kmers = 0;
+            if(haplotype_scorer.haplotype_barcode_disagree[winning_pair].find(b.first) != haplotype_scorer.haplotype_barcode_disagree[winning_pair].end()){
+                total_disagreeing_kmers = haplotype_scorer.haplotype_barcode_disagree[winning_pair][b.first];
+            }
+        }
+    }
     return 0;
 }
