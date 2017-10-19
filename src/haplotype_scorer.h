@@ -28,7 +28,7 @@ private:
 
 public:
     std::map<int, std::map<std::string, int > > haplotype_barcode_agree;
-    std::map<std::pair<int, int> , std::map<std::string, int > > haplotype_barcode_disagree;
+    std::map<int, std::map<std::string, int > > haplotype_barcode_disagree;
     std::map<std::string, std::map<int, int> > barcode_haplotype_mappings;
     std::map<std::string,  int> barcode_hom_mappings;
     std::map<std::string, int > kmers_per_barcode;
