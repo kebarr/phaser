@@ -133,6 +133,7 @@ int main(int argc, char **argv) {
     std::string line;
     std::ifstream infile(graph_file_list);
     // this should be a oarallel for
+    # pragma omp parallel for
     while (std::getline(infile, line)) {
         std::istringstream(line) >> fields[0] >> fields[1];
         graph_filename = fields[0];
