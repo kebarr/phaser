@@ -111,7 +111,7 @@ int HaplotypeScorer::score_haplotypes() {
                     if (std::find(winners.begin(), winners.end(), hap) != winners.end()) {
                         haplotype_support[hap] += 1;
                         hap_pair_support[std::make_pair(hap, pair)] += 1;
-                        haplotype_barcode_agree[std::make_pair(hap, pair)][barcode] += bm.second[hap];
+                        haplotype_barcode_agree[hap][barcode] += bm.second[hap];
                     }
                 }
             }
@@ -124,13 +124,12 @@ int HaplotypeScorer::score_haplotypes() {
                         haplotype_support[pair] += 1;
                         hap_pair_support[std::make_pair(hap, pair)] += 1;
                         // for each barcode which selects the winner, need total kmers agreeing/disagreeing
-                        haplotype_barcode_agree[std::make_pair(hap, pair)][barcode] += bm.second[pair];
+                        haplotype_barcode_agree[pair][barcode] += bm.second[pair];
                     }
                 }
             }
             if (bm.second.find(hap) == bm.second.end()) {
                 haplotype_not_support[hap] += 1;
-
             }
             if (bm.second.find(pair) == bm.second.end()) {
                 haplotype_not_support[pair] += 1;
@@ -138,6 +137,7 @@ int HaplotypeScorer::score_haplotypes() {
             if (bm.second.find(hap) == bm.second.end() and bm.second.find(pair) == bm.second.end()) {
                 hap_pair_not_support[std::make_pair(hap, pair)] += 1;
                 haplotype_barcode_disagree[std::make_pair(hap, pair)][barcode] += bm.second[hap];
+
                 haplotype_barcode_disagree[std::make_pair(hap, pair)][barcode] += bm.second[pair];
 
             }
@@ -202,6 +202,8 @@ int HaplotypeScorer::score_haplotypes() {
     auto pair_overall_support_stdev = stdev(hap_pair_support_total_score_values, pair_overall_support_mean);
     max_overall_pair_support = *overall_pair_support_max;
     mean_overall_pair_support = pair_overall_support_mean;
+    max_overall_support = *support_max;
+    mean_overall_support = support_mean;
     std::cout << "Haplotype pair support max : " << *pair_support_max << "min : " << *pair_support_min << " mean: "
               << pair_support_mean << " stdev: " << pair_support_stdev << std::endl;
     std::cout << "Haplotype pair not support max : " << *not_pair_support_max << "min : " << *not_pair_support_min
@@ -340,16 +342,32 @@ void HaplotypeScorer::write_output_success(std::string output_file){
     }
     out << std::endl;
     out << "Overall support for pair: " << max_overall_pair_support << " mean:" << mean_overall_pair_support <<std::endl;
-    out << "Barcodes supporting winner:" << std::endl;
+    out << "Highest overall individual hap support: " << max_overall_support << " mean: " << mean_overall_support <<std::endl;
+    out << "Barcodes supporting winner, hap1:" << std::endl;
     std::vector<std::string> barcodes_seen;
     // need barcodes supporting this pair- to outputm for each barcode, total kmers, kmers agreeing, kmers disagreeing, kmers to hom parts, other
-    for (auto b:haplotype_barcode_agree[winning_pair]){
+    for (auto b:haplotype_barcode_agree[std::get<0>(winning_pair)]){
         barcodes_seen.push_back(b.first);
         int total_agreeing_kmers = b.second;
         int total_hom_kmers = barcode_hom_mappings[b.first];
         int total_kmers = kmers_per_barcode[b.first];
         int total_disagreeing_kmers = 0;
-        if(haplotype_barcode_disagree[winning_pair].find(b.first) != haplotype_barcode_disagree[winning_pair].end()){
+        if(haplotype_barcode_disagree[std::get<0>(winning_pair)].find(b.first) != haplotype_barcode_disagree[std::get<0>(winning_pair)].end()){
+            total_disagreeing_kmers = haplotype_barcode_disagree[winning_pair][b.first];
+        }
+        // kmers mapping elsewhere is just total minus all others
+        int other = total_kmers - total_agreeing_kmers - total_hom_kmers - total_disagreeing_kmers;
+        out << b.first << ": " << total_agreeing_kmers << ", " << total_disagreeing_kmers << ", " << total_hom_kmers <<", " << other << ", " << total_kmers << std::endl;
+    }
+    out << "Barcodes supporting winner, hap2:" << std::endl;
+    // need barcodes supporting this pair- to outputm for each barcode, total kmers, kmers agreeing, kmers disagreeing, kmers to hom parts, other
+    for (auto b:haplotype_barcode_agree[std::get<1>(winning_pair)]){
+        barcodes_seen.push_back(b.first);
+        int total_agreeing_kmers = b.second;
+        int total_hom_kmers = barcode_hom_mappings[b.first];
+        int total_kmers = kmers_per_barcode[b.first];
+        int total_disagreeing_kmers = 0;
+        if(haplotype_barcode_disagree[std::get<1>(winning_pair)].find(b.first) != haplotype_barcode_disagree[std::get<1>(winning_pair)].end()){
             total_disagreeing_kmers = haplotype_barcode_disagree[winning_pair][b.first];
         }
         // kmers mapping elsewhere is just total minus all others
