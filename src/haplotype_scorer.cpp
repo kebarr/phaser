@@ -351,10 +351,7 @@ void HaplotypeScorer::write_output_success(std::string output_file){
         int total_agreeing_kmers = b.second;
         int total_hom_kmers = barcode_hom_mappings[b.first];
         int total_kmers = kmers_per_barcode[b.first];
-        int total_disagreeing_kmers = 0;
-        if(haplotype_barcode_disagree[std::get<0>(winning_pair)].find(b.first) != haplotype_barcode_disagree[std::get<0>(winning_pair)].end()){
-            total_disagreeing_kmers = haplotype_barcode_disagree[winning_pair][b.first];
-        }
+        int total_disagreeing_kmers = haplotype_barcode_disagree[winning_pair].size();
         // kmers mapping elsewhere is just total minus all others
         int other = total_kmers - total_agreeing_kmers - total_hom_kmers - total_disagreeing_kmers;
         out << b.first << ": " << total_agreeing_kmers << ", " << total_disagreeing_kmers << ", " << total_hom_kmers <<", " << other << ", " << total_kmers << std::endl;
@@ -366,10 +363,7 @@ void HaplotypeScorer::write_output_success(std::string output_file){
         int total_agreeing_kmers = b.second;
         int total_hom_kmers = barcode_hom_mappings[b.first];
         int total_kmers = kmers_per_barcode[b.first];
-        int total_disagreeing_kmers = 0;
-        if(haplotype_barcode_disagree[std::get<1>(winning_pair)].find(b.first) != haplotype_barcode_disagree[std::get<1>(winning_pair)].end()){
-            total_disagreeing_kmers = haplotype_barcode_disagree[winning_pair][b.first];
-        }
+        int total_disagreeing_kmers = haplotype_barcode_disagree[winning_pair].size();
         // kmers mapping elsewhere is just total minus all others
         int other = total_kmers - total_agreeing_kmers - total_hom_kmers - total_disagreeing_kmers;
         out << b.first << ": " << total_agreeing_kmers << ", " << total_disagreeing_kmers << ", " << total_hom_kmers <<", " << other << ", " << total_kmers << std::endl;
