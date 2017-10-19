@@ -112,6 +112,7 @@ int HaplotypeScorer::score_haplotypes() {
                         haplotype_support[hap] += 1;
                         hap_pair_support[std::make_pair(hap, pair)] += 1;
                         haplotype_barcode_agree[hap][barcode] += bm.second[hap];
+                        haplotype_barcode_disagree[hap][barcode] += bm.second[pair];
                     }
                 }
             }
@@ -125,6 +126,8 @@ int HaplotypeScorer::score_haplotypes() {
                         hap_pair_support[std::make_pair(hap, pair)] += 1;
                         // for each barcode which selects the winner, need total kmers agreeing/disagreeing
                         haplotype_barcode_agree[pair][barcode] += bm.second[pair];
+                        // for each barcode, and each candidate haplotype, need to find out how many kmers from that don't support that haplotype- which is number of kmers for that barcode that support other in pair
+                        haplotype_barcode_disagree[pair][barcode] += bm.second[hap];
                     }
                 }
             }
@@ -136,9 +139,6 @@ int HaplotypeScorer::score_haplotypes() {
             }
             if (bm.second.find(hap) == bm.second.end() and bm.second.find(pair) == bm.second.end()) {
                 hap_pair_not_support[std::make_pair(hap, pair)] += 1;
-                haplotype_barcode_disagree[hap][barcode] += bm.second[hap];
-
-                haplotype_barcode_disagree[hap][barcode] += bm.second[pair];
 
             }
         }
