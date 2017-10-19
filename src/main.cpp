@@ -140,8 +140,9 @@ int main(int argc, char **argv) {
         start_edge = fields[1];
         std::cout << "----------------------------------------" << std::endl;
         std::cout << "Phasing GFA: " << graph_filename << std::endl;
-        std::string filename = graph_filename.substr(0, graph_filename.find_last_of("."));
+        std::string filename = graph_filename.substr(2, graph_filename.find_last_of(".gfa"));
         std::string output_file = output_file_pref + filename;
+        std::cout << "Output file: " << output_file <<std::endl;
         Graph graph = Graph();
         graph.load_gfa(graph_filename);
         std::cout << "Traversing from start edge " << start_edge << " in + direction" << std::endl;
@@ -164,6 +165,7 @@ int main(int argc, char **argv) {
             int success = haplotype_scorer.score_haplotypes();
             // if we've picked a winner
             if (success == 0) {
+                std::cout << "Writing output" <<std::endl;
                 haplotype_scorer.write_output_success(output_file);
                 graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "sequences1" + output_file + ".gfa",
                                             "haplotype1");
@@ -171,6 +173,8 @@ int main(int argc, char **argv) {
                                             "haplotype2");
 
             } else if (success == 1) { // if we're less confident about winner
+                std::cout << "Writing output" <<std::endl;
+
                 haplotype_scorer.write_output_partial_success(output_file);
                 graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners),
                                             "partial_sequences1" + output_file + ".gfa",
