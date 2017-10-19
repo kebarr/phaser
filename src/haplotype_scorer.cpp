@@ -246,8 +246,8 @@ int HaplotypeScorer::score_haplotypes() {
     print_pair_int_vector(pair_overall_support_winner);
     print_vector(possible_haplotypes[support_winner[0]]);
     // if they agree on all scores, call it
-    if (std::get<0>(pair_overall_support_winner[0]) == overall_support_winner[0] &&
-        std::get<0>(pair_support_winner[0]) == support_winner[0]) {
+    if ((std::get<0>(pair_overall_support_winner[0]) == overall_support_winner[0] || std::get<1>(pair_overall_support_winner[0]) == overall_support_winner[0] )&&
+            (std::get<0>(pair_support_winner[0]) == support_winner[0] || std::get<1>(pair_support_winner[0]) == support_winner[0])) {
         winners = std::make_pair(possible_haplotypes[std::get<1>(pair_overall_support_winner[0])],
                                  possible_haplotypes[std::get<0>(pair_overall_support_winner[0])]);
         winning_pair = pair_overall_support_winner[0];

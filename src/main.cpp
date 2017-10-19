@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
         start_edge = fields[1];
         std::cout << "----------------------------------------" << std::endl;
         std::cout << "Phasing GFA: " << graph_filename << std::endl;
-        std::string filename = graph_filename.substr(graph_filename.find(".gfa"));
+        std::string filename = graph_filename.substr(0, graph_filename.find_last_of("."));
         std::string output_file = output_file_pref + filename;
         Graph graph = Graph();
         graph.load_gfa(graph_filename);
