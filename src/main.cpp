@@ -163,6 +163,7 @@ int main(int argc, char **argv) {
             haplotype_scorer.load_mappings_from_dict(mappings);
             haplotype_scorer.decide_barcode_haplotype_support();
             int success = haplotype_scorer.score_haplotypes();
+
             // if we've picked a winner
             if (success == 0) {
                 std::cout << "Writing output" <<std::endl;

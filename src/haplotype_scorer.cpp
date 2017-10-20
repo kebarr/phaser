@@ -4,16 +4,76 @@
 
 #include <numeric>
 #include "haplotype_scorer.h"
+
+template <typename T, typename T2=T>
+struct accumulator
+{
+    T2 sum; // we could plug in a more accurate type for the sum
+    T S;
+    T M;
+    size_t N;
+
+    // default constructor initializes all values
+    accumulator() : sum(0), S(0), M(0), N(0) { }
+
+    // add another number
+    T2 operator()(const T& x) {
+        ++N;
+        sum += x;
+        T Mprev = M;
+        M += (x - Mprev) / N;
+        S += (x - Mprev) * (x - M);
+        return sum;
+    }
+
+    T mean() const { return sum / N; }
+
+    T variance() const { return S / (N - 1); }
+
+    // operator<< to print the statistics to screen:
+    // denoted friend just to be able to write this inside
+    // the class definition and thus not to need to write
+    // the template specification of accumulator...
+    friend std::ostream& operator<<(std::ostream& out,
+                                    const accumulator& a)
+    {
+        if (a.N > 0)
+            out << "N\t\t\t= " << a.N << std::endl
+                << "sum\t\t\t= " << a.sum << std::endl
+                << "mean\t\t= " << std::fixed << std::setprecision(2) << a.mean() << std::endl;
+        if (a.N > 1)
+            out << "sd\t\t\t= " << std::fixed << std::setprecision(2) << std::sqrt(a.variance()) << std::endl;
+        else
+            out << "sd\t\t\t= " << std::fixed << std::setprecision(2) << 0 << std::endl;
+        return out;
+    }
+
+};
+/*
+void print_stuff_vect_int(std::vector<int> in){
+    auto a = accumulator<float,double>(); // Generate summary statistics for the offset distribution
+    for (auto element; in) {
+        a(element); // Call once per value
+    }
+    std::cout << a; // print statistics
+}*/
+
 double avg(std::vector<int> v){
-    return std::accumulate(v.begin(), v.end(), 0LL) / v.size();
+    if (v.size() > 0) {
+        return std::accumulate(v.begin(), v.end(), 0LL) / v.size();
+    }
+    return 0.0;
 }
 
 double stdev(std::vector<int> v, double mean){
-    double res=0;
-    for (auto i: v){
-        res += std::pow(i-mean,2);
+    if (v.size() > 0) {
+        double res = 0;
+        for (auto i: v) {
+            res += std::pow(i - mean, 2);
+        }
+        return std::pow(res / v.size(), 0.5);
     }
-    return std::pow(res/v.size(), 0.5);
+    return 0.0;
 }
 
 
@@ -27,6 +87,7 @@ HaplotypeScorer::HaplotypeScorer(std::string mapping_file, std::vector<std::vect
             edges.insert(e);
         }
     }
+
     std::cout << "edges in haps: "<< edges.size() <<std::endl;
     for (auto e:edges){
         for (int i=0; i < possible_haplotypes.size(); i++){
