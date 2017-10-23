@@ -158,11 +158,11 @@ int main(int argc, char **argv) {
             std::vector<std::vector<std::string> > possible_haplotypes = graph.calculate_possible_haplotypes();
             std::cout << "found " << possible_haplotypes.size() << "candidate haplotypes of length "
                       << possible_haplotypes[0].size() << std::endl;
-            std::cout << "loading " << mappings_filename << std::endl;
+            std::cout << "loading " << mappings_filename << " " << mappings.size() << std::endl;
             HaplotypeScorer haplotype_scorer = HaplotypeScorer(mappings_filename, possible_haplotypes, graph);
             haplotype_scorer.load_mappings_from_dict(mappings);
             haplotype_scorer.decide_barcode_haplotype_support();
-            int success = haplotype_scorer.score_haplotypes();
+            int success = haplotype_scorer.score_haplotypes("formatted_" + output_file);
 
             // if we've picked a winner
             if (success == 0) {
