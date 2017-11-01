@@ -140,7 +140,11 @@ int main(int argc, char **argv) {
         start_edge = fields[1];
         std::cout << "----------------------------------------" << std::endl;
         std::cout << "Phasing GFA: " << graph_filename << std::endl;
-        std::string filename = graph_filename.substr(2, graph_filename.find_last_of(".gfa"));
+        int start = 0;
+        if (graph_filename.find("/") != std::string::npos){
+            start = graph_filename.find("/");
+        }
+        std::string filename = graph_filename.substr(start, graph_filename.find_last_of("."));
         std::string output_file = output_file_pref + filename;
         std::cout << "Output file: " << output_file <<std::endl;
         Graph graph = Graph();
@@ -168,21 +172,21 @@ int main(int argc, char **argv) {
             if (success == 0) {
                 std::cout << "Writing output" <<std::endl;
                 haplotype_scorer.write_output_success(output_file);
-                graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "sequences1" + output_file + ".gfa",
-                                            "haplotype1");
-                graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "sequences2" + output_file + ".gfa",
-                                            "haplotype2");
+                //graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "sequences1" + output_file + ".gfa",
+                                            //"haplotype1");
+                //graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "sequences2" + output_file + ".gfa",
+                                            //"haplotype2");
 
             } else if (success == 1) { // if we're less confident about winner
                 std::cout << "Writing output" <<std::endl;
 
                 haplotype_scorer.write_output_partial_success(output_file);
-                graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners),
-                                            "partial_sequences1" + output_file + ".gfa",
-                                            "haplotype1");
-                graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners),
-                                            "partial_sequences2" + output_file + ".gfa",
-                                            "haplotype2");
+                //graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners),
+                                            //"partial_sequences1" + output_file + ".gfa",
+                                            //"haplotype1");
+                //graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners),
+                                            //"partial_sequences2" + output_file + ".gfa",
+                                            //"haplotype2");
 
             }
         }

@@ -124,7 +124,7 @@ void Graph::write_output_subgraph(std::vector<std::string> bubble_edges, std::st
         auto previous_dir = std::get<1>(start_edge);
         std::vector<std::pair<std::string, std::string> > next_edge = edges_to_include[std::make_pair(std::get<0>(start_edge), previous_dir)];
         edges_to_output.push_back(std::make_pair(std::get<0>(start_edge), false));
-        auto e =  next_edge[0]; // seems really dumb to use a for loop to access a single element
+        auto e =  next_edge[0];
         auto edge_name = std::get<0>(e);
         std::string current_dir = std::get<1>(e);
         auto edge_leaving_other_way = edges_to_include[std::make_pair(edge_name, switch_pm[current_dir])];
@@ -260,6 +260,62 @@ std::pair<std::string, std::string> Graph::check_bubble(std::pair<std::string, s
     }
     return std::make_pair("","");
 
+}
+
+void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble_edges, std::string outfile_name){
+    // need to be able to reconstruct each haplotype sequence, phaser just outputs contig chcoices, so need inbetween links
+    std::vector<std::string> hom_edges;
+    for (auto edge:edges){
+        if (std::find(edges_in_bubbles.begin(), edges_in_bubbles.end(), edge) == edges_in_bubbles.end()){
+            hom_edges.push_back(edge);
+        }
+    }
+    std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > > edges_to_include;
+    // easier- just go through all links- if its a hom link, or included in bubble edges, take it
+    for (auto link:edge_list){
+        std::string e1_name = std::get<0>(link.first);
+        for (auto joined_to: link.second) {
+            std::string e2_name = std::get<0>(joined_to);
+            if (std::find(hom_edges.begin(), hom_edges.end(), e1_name) != hom_edges.end() &&
+                std::find(bubble_edges.begin(), bubble_edges.end(), e2_name) != bubble_edges.end()) {
+                // then this link should be included
+                edges_to_include[link.first].push_back(joined_to);
+            } else if (std::find(hom_edges.begin(), hom_edges.end(), e2_name) != hom_edges.end() &&
+                       std::find(bubble_edges.begin(), bubble_edges.end(), e1_name) != bubble_edges.end()) {
+                edges_to_include[link.first].push_back(joined_to);
+
+            }
+        }
+    }
+    // to be able to output this as 1 contig, each edge should be joined once at end, once at start - except end ones
+    bool can_output = can_output_graph_sequence(edges_to_include);
+    std::vector<std::string > edges_to_output;
+    if (can_output) {
+        // need to order/orient contigs - know that apart from ends, each is joined to 1 only at each end
+        // ok, try again, find one of end contigs and just go along
+        auto start_edge = find_start_edge(edges_to_include);
+        auto previous_dir = std::get<1>(start_edge);
+        std::vector<std::pair<std::string, std::string> > next_edge = edges_to_include[std::make_pair(
+                std::get<0>(start_edge), previous_dir)];
+        edges_to_output.push_back(std::get<0>(start_edge));
+        auto e = next_edge[0];
+        auto edge_name = std::get<0>(e);
+        std::string current_dir = std::get<1>(e);
+        auto edge_leaving_other_way = edges_to_include[std::make_pair(edge_name, switch_pm[current_dir])];
+        while (edge_leaving_other_way.size() != 0) {
+            edges_to_output.push_back(edge_name);
+            edge_leaving_other_way = edges_to_include[std::make_pair(edge_name, current_dir)];
+            next_edge = edge_leaving_other_way;
+            edge_name = std::get<0>(next_edge[0]);
+            current_dir = std::get<1>(next_edge[0]);
+        }
+        std::ofstream out(outfile_name);
+        for (auto edge:edges_to_output){
+            out << edge << "\t";
+        }
+        out << "\n";
+
+    }
 }
 
 void Graph::traverse_graph(std::string start_node, std::string in_dir, std::vector<std::string > &traversed_edge_list){

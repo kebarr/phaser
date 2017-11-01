@@ -532,6 +532,8 @@ void HaplotypeScorer::write_output_success(std::string output_file){
     for (auto h: winner2){
         out << h << " ";
     }
+    graph.output_contigs_joined_to_contig_list(winner1, output_file + ".hap1");
+    graph.output_contigs_joined_to_contig_list(winner2, output_file + ".hap2");
     out << std::endl;
     out << "Overall support for pair: " << max_overall_pair_support << " mean:" << mean_overall_pair_support <<std::endl;
     out << "Highest overall individual hap support: " << max_overall_support << " mean: " << mean_overall_support <<std::endl;
