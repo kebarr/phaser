@@ -25,7 +25,7 @@ class Graph
 {
 private:
     std::map<std::string, std::string> switch_pm = {{"+","-"}, {"-","+"}};
-
+    std::map<std::pair<std::string, std::string>, std::pair<std::string, std::string> > original_edge_dirs;
     std::vector<std::pair<std::string, bool> > find_next_edges(std::vector<std::pair<std::string, bool> >, std::vector<std::string> , std::vector<std::string> , std::set<std::pair<std::string, std::string> > );
 public:
     void output_contigs_joined_to_contig_list(std::vector<std::string>, std::map<std::string, int >, std::string);

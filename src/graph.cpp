@@ -225,6 +225,8 @@ void Graph::load_gfa(std::string infile_name){
             edge_list[std::make_pair(fields[1], fields[2])].insert(value_fwd);
             //std::pair<std::string, std::string> inverse_link = std::make_pair(fields[3], switch_pm[fields[4]]);
             edge_list[inverse_link].insert(value_bwd);
+            std::pair<std::string, std::string>  pms = std::make_pair(fields[2], fields[4]);
+            original_edge_dirs[std::make_pair(fields[1], fields[3])] = pms;
             counter +=1;
         } else if (fields[0] == "S"){
             nodes[fields[1]] = fields[2];
@@ -311,7 +313,7 @@ void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble
         }
         std::ofstream out(outfile_name);
         for (auto edge:edges_to_output){
-            out << edge << "\t";
+            out << edge << ", ";
         }
         out << "\n";
         for (auto b:agreeing_barcodes){
