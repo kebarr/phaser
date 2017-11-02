@@ -262,7 +262,7 @@ std::pair<std::string, std::string> Graph::check_bubble(std::pair<std::string, s
 
 }
 
-void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble_edges, std::string outfile_name){
+void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble_edges, std::map<std::string, int > agreeing_barcodes, std::string outfile_name){
     // need to be able to reconstruct each haplotype sequence, phaser just outputs contig chcoices, so need inbetween links
     std::vector<std::string> hom_edges;
     for (auto edge:edges){
@@ -314,10 +314,14 @@ void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble
             out << edge << "\t";
         }
         out << "\n";
+        for (auto b:agreeing_barcodes){
+            out << b.first << "\n";
+        }
 
     }
 }
 
+//TODO: seen at least one example of this stopping one edge earlier than needed
 void Graph::traverse_graph(std::string start_node, std::string in_dir, std::vector<std::string > &traversed_edge_list){
     // i replicated the links to ensure every on is a key in the dict- now means we can go same way when supposed to go oppotite ways
     // get nodes joined from other direction- so when we start g

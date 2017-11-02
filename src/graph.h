@@ -28,7 +28,7 @@ private:
 
     std::vector<std::pair<std::string, bool> > find_next_edges(std::vector<std::pair<std::string, bool> >, std::vector<std::string> , std::vector<std::string> , std::set<std::pair<std::string, std::string> > );
 public:
-    void output_contigs_joined_to_contig_list(std::vector<std::string>, std::string);
+    void output_contigs_joined_to_contig_list(std::vector<std::string>, std::map<std::string, int >, std::string);
     std::set<std::string> edges;
     std::map<std::string, std::string>  nodes;
     std::vector<std::pair< std::string, std::string> > bubbles;
