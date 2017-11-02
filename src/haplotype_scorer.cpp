@@ -239,7 +239,8 @@ void HaplotypeScorer::print_pair_summary(std::string outfile, std::vector<std::p
                                                      << avg(hap_pair_not_support_values) << "\t" << stdev(hap_pair_not_support_values, avg(hap_pair_not_support_values))<< "\t"<< *overall_pair_support_max << "\t"
             << *std::min_element(hap_pair_support_total_score_values.begin(), hap_pair_support_total_score_values.end()) << std::endl;
 
-    for (int i=0; i < 3; i++) {
+    unsigned long len = 3 ? pair_supports.size() >= 3 : pair_supports.size();
+    for (int i=0; i < len; i++) {
         out << "Barcode support\tHapP1" << "\t" << i << "\t";
 
         for (auto h: possible_haplotypes[std::get<0>(pair_supports[i].first)]){
@@ -247,7 +248,7 @@ void HaplotypeScorer::print_pair_summary(std::string outfile, std::vector<std::p
         }
         out << std::endl;
     }
-    for (int i=0; i < 3; i++) {
+    for (int i=0; i < len; i++) {
         out << "Barcode support\tHapP2" << "\t" << i << "\t";
         for (auto h: possible_haplotypes[std::get<1>(pair_supports[i].first)]){
             out << h << "\t";
