@@ -312,8 +312,17 @@ void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble
             current_dir = std::get<1>(next_edge[0]);
         }
         std::ofstream out(outfile_name);
-        for (auto edge:edges_to_output){
-            out << edge << ", ";
+        for (auto i=0;i < edges_to_output.size() -1; i++){
+            auto edge = edges_to_output[i];
+            auto next_edge = edges_to_output[i+1];
+            if (original_edge_dirs.find(std::make_pair(edge, next_edge)) != original_edge_dirs.end()){
+                auto dir = std::get<0>(original_edge_dirs[std::make_pair(edge, next_edge)]);
+                out << edge << dir << ",";
+            } else if (original_edge_dirs.find(std::make_pair(next_edge, edge)) != original_edge_dirs.end()){
+                // if original link was in opposite dir, need to switch plus/minus
+                auto dir = switch_pm[std::get<0>(original_edge_dirs[std::make_pair(next_edge, edge)])];
+                out << edge << dir << ",";
+            }
         }
         out << "\n";
         for (auto b:agreeing_barcodes){
