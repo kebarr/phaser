@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
         if (graph_filename.find("/") != std::string::npos){
             start = graph_filename.find("/");
         }
-        std::string filename = graph_filename.substr(start, graph_filename.find_last_of("."));
+        std::string filename = graph_filename.substr(start+1, graph_filename.find_last_of(".")-1);
         std::string output_file = output_file_pref + filename;
         std::cout << "Output file: " << output_file <<std::endl;
         Graph graph = Graph();
