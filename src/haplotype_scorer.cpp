@@ -274,6 +274,7 @@ void HaplotypeScorer::print_pair_summary(std::string outfile, std::vector<std::p
 }
 
 int HaplotypeScorer::score_haplotypes(std::string outfile) {
+    std::cout << possible_haplotypes.size() << std::endl;
     //initialize score arrays- index is haplotype index
     int haplotype_support[possible_haplotypes.size()] = {0};
     int haplotype_not_support[possible_haplotypes.size()] = {0};
@@ -282,12 +283,6 @@ int HaplotypeScorer::score_haplotypes(std::string outfile) {
     std::map<std::pair<int, int>, int> hap_pair_support;
     std::map<std::pair<int, int>, int> hap_pair_support_total_score;
     std::string barcode;
-    std::ofstream mappings("barcode_mappings.txt");
-    for (auto &bm: barcode_haplotype_mappings) {
-        for (auto e:bm.second) {
-            mappings << bm.first << " : " << e.first << " " << e.second << std::endl;
-        }
-    }
     for (auto &bm: barcode_haplotype_mappings) {
         barcode = bm.first;
         // winner_for_this_barcode = [h for h in self.barcode_mappings[barcode] if self.barcode_mappings[barcode][h] == np.max(hap_support_dict.values())]

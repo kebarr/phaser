@@ -141,12 +141,12 @@ int main(int argc, char **argv) {
         std::cout << "----------------------------------------" << std::endl;
         std::cout << "Phasing GFA: " << graph_filename << std::endl;
         int start = 0;
-        if (graph_filename.find("/") != std::string::npos){
+        if (graph_filename.find("/") != std::string::npos) {
             start = graph_filename.find("/");
         }
-        std::string filename = graph_filename.substr(start+1, graph_filename.find_last_of(".")-1);
+        std::string filename = graph_filename.substr(start + 1, graph_filename.find_last_of(".") - 1);
         std::string output_file = output_file_pref + filename;
-        std::cout << "Output file: " << output_file <<std::endl;
+        std::cout << "Output file: " << output_file << std::endl;
         Graph graph = Graph();
         graph.load_gfa(graph_filename);
         std::cout << "Traversing from start edge " << start_edge << " in + direction" << std::endl;
@@ -166,34 +166,38 @@ int main(int argc, char **argv) {
             HaplotypeScorer haplotype_scorer = HaplotypeScorer(mappings_filename, possible_haplotypes, graph);
             haplotype_scorer.load_mappings_from_dict(mappings);
             haplotype_scorer.decide_barcode_haplotype_support();
-            int success = haplotype_scorer.score_haplotypes("formatted_" + output_file);
+            if (haplotype_scorer.barcode_haplotype_mappings.size() > 0) {
+                int success = haplotype_scorer.score_haplotypes("formatted_" + output_file);
 
-            // if we've picked a winner
-            if (success == 0) {
-                std::cout << "Writing output" <<std::endl;
-                haplotype_scorer.write_output_success(output_file);
-                //graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "sequences1" + output_file + ".gfa",
-                                            //"haplotype1");
-                //graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "sequences2" + output_file + ".gfa",
-                                            //"haplotype2");
+                // if we've picked a winner
+                if (success == 0) {
+                    std::cout << "Writing output" << std::endl;
+                    haplotype_scorer.write_output_success(output_file);
+                    //graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "sequences1" + output_file + ".gfa",
+                    //"haplotype1");
+                    //graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "sequences2" + output_file + ".gfa",
+                    //"haplotype2");
 
-            } else if (success == 1) { // if we're less confident about winner
-                std::cout << "Writing output" <<std::endl;
+                } else if (success == 1) { // if we're less confident about winner
+                    std::cout << "Writing output" << std::endl;
 
-                haplotype_scorer.write_output_partial_success(output_file);
-                //graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners),
-                                            //"partial_sequences1" + output_file + ".gfa",
-                                            //"haplotype1");
-                //graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners),
-                                            //"partial_sequences2" + output_file + ".gfa",
-                                            //"haplotype2");
+                    haplotype_scorer.write_output_partial_success(output_file);
+                    //graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners),
+                    //"partial_sequences1" + output_file + ".gfa",
+                    //"haplotype1");
+                    //graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners),
+                    //"partial_sequences2" + output_file + ".gfa",
+                    //"haplotype2");
 
+                }
+            }else {
+                std::cout << "No mappings suitable for phasing " << std::endl;
             }
+            std::cout << "----------------------------------------" << std::endl;
+            std::cout << std::endl;
+            std::cout << std::endl;
+            std::cout << std::endl;
         }
-        std::cout << "----------------------------------------" << std::endl;
-        std::cout <<std::endl;
-        std::cout <<std::endl;
-        std::cout <<std::endl;
     }
     return 0;
 }
