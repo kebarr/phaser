@@ -132,9 +132,17 @@ int main(int argc, char **argv) {
     std::string fields[2];
     std::string line;
     std::ifstream infile(graph_file_list);
+    int graphs = 0;
+    int unphaseable = 0;
+    int phaseable = 0;
+    int phased_success = 0;
+    int phased_partial_success = 0;
+    int exceptions = 0;
+    int no_mappings = 0;
     // this should be a oarallel for
     # pragma omp parallel for
     while (std::getline(infile, line)) {
+        graphs += 1;
         std::istringstream(line) >> fields[0] >> fields[1];
         graph_filename = fields[0];
         start_edge = fields[1];
@@ -167,37 +175,52 @@ int main(int argc, char **argv) {
             haplotype_scorer.load_mappings_from_dict(mappings);
             haplotype_scorer.decide_barcode_haplotype_support();
             if (haplotype_scorer.barcode_haplotype_mappings.size() > 0) {
-                int success = haplotype_scorer.score_haplotypes("formatted_" + output_file);
+                phaseable += 1;
+                try {
+                    int success = haplotype_scorer.score_haplotypes("formatted_" + output_file);
 
-                // if we've picked a winner
-                if (success == 0) {
-                    std::cout << "Writing output" << std::endl;
-                    haplotype_scorer.write_output_success(output_file);
-                    //graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "sequences1" + output_file + ".gfa",
-                    //"haplotype1");
-                    //graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "sequences2" + output_file + ".gfa",
-                    //"haplotype2");
+                    // if we've picked a winner
+                    if (success == 0) {
+                        std::cout << "Writing output" << std::endl;
+                        haplotype_scorer.write_output_success(output_file);
+                        //graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "sequences1" + output_file + ".gfa",
+                        //"haplotype1");
+                        //graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "sequences2" + output_file + ".gfa",
+                        //"haplotype2");
+                        phased_success += 1;
 
-                } else if (success == 1) { // if we're less confident about winner
-                    std::cout << "Writing output" << std::endl;
+                    } else if (success == 1) { // if we're less confident about winner
+                        std::cout << "Writing output" << std::endl;
 
-                    haplotype_scorer.write_output_partial_success(output_file);
-                    //graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners),
-                    //"partial_sequences1" + output_file + ".gfa",
-                    //"haplotype1");
-                    //graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners),
-                    //"partial_sequences2" + output_file + ".gfa",
-                    //"haplotype2");
+                        haplotype_scorer.write_output_partial_success(output_file);
+                        //graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners),
+                        //"partial_sequences1" + output_file + ".gfa",
+                        //"haplotype1");
+                        //graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners),
+                        //"partial_sequences2" + output_file + ".gfa",
+                        //"haplotype2");
+                        phased_partial_success += 1;
+
+                    }
+                } catch (...){
+                    std::cout << "Caught exception scoring haplotypes" << std::endl;
+                    // no idea what info to put here, apparently can't get full exception from a catch all
+                    exceptions += 1;
 
                 }
             }else {
                 std::cout << "No mappings suitable for phasing " << std::endl;
+                no_mappings += 1;
             }
             std::cout << "----------------------------------------" << std::endl;
             std::cout << std::endl;
             std::cout << std::endl;
             std::cout << std::endl;
+        } else {
+            unphaseable += 1;
         }
     }
+    std::cout << "Phasing " << graphs << " complete, " << phaseable << " contained > 1 bubble, " << unphaseable << " did not." << std::endl;
+    std::cout << phased_success << " graphs phased confidently, " << phased_partial_success << " graphs phased less confidently, " << no_mappings << " did not have enough mappings for phasing, and  " << exceptions << " raised." <<std::endl;
     return 0;
 }
