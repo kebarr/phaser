@@ -287,6 +287,13 @@ int HaplotypeScorer::score_haplotypes(std::string outfile) {
         barcode = bm.first;
         // winner_for_this_barcode = [h for h in self.barcode_mappings[barcode] if self.barcode_mappings[barcode][h] == np.max(hap_support_dict.values())]
         std::vector<int> winners = winner_for_barcode(barcode); // ideally should be length 1
+        for (auto winner:winners){
+            int pair = possible_haplotypes.size() - 1 - winner;
+            haplotype_support[winner] += 1;
+            hap_pair_support[std::make_pair(winner, pair)] += 1;
+            haplotype_barcode_agree[winner][barcode] += bm.second[winner];
+            haplotype_barcode_disagree[winner][barcode] += bm.second[pair];
+        }
         // for haplotype in range(len(self.list_of_possible_haplotypes)/2):
         for (int hap = 0; hap < possible_haplotypes.size() / 2; hap++) {
             // pair = len(self.list_of_possible_haplotypes) -1 -haplotype
@@ -294,29 +301,11 @@ int HaplotypeScorer::score_haplotypes(std::string outfile) {
             if (bm.second.find(hap) != bm.second.end()) {
                 haplotype_overall_support[hap] += bm.second[hap];
                 hap_pair_support_total_score[std::make_pair(hap, pair)] += bm.second[hap];
-                if (winners.size() > 0) {
-                    if (std::find(winners.begin(), winners.end(), hap) != winners.end()) {
-                        haplotype_support[hap] += 1;
-                        hap_pair_support[std::make_pair(hap, pair)] += 1;
-                        haplotype_barcode_agree[hap][barcode] += bm.second[hap];
-                        haplotype_barcode_disagree[hap][barcode] += bm.second[pair];
-                    }
-                }
             }
 
             if (bm.second.find(pair) != bm.second.end()) {
                 haplotype_overall_support[pair] += bm.second[pair];
                 hap_pair_support_total_score[std::make_pair(hap, pair)] += bm.second[pair];
-                if (winners.size() > 0) {
-                    if (std::find(winners.begin(), winners.end(), pair) != winners.end()) {
-                        haplotype_support[pair] += 1;
-                        hap_pair_support[std::make_pair(hap, pair)] += 1;
-                        // for each barcode which selects the winner, need total kmers agreeing/disagreeing
-                        haplotype_barcode_agree[pair][barcode] += bm.second[pair];
-                        // for each barcode, and each candidate haplotype, need to find out how many kmers from that don't support that haplotype- which is number of kmers for that barcode that support other in pair
-                        haplotype_barcode_disagree[pair][barcode] += bm.second[hap];
-                    }
-                }
             }
             if (bm.second.find(hap) == bm.second.end()) {
                 haplotype_not_support[hap] += 1;
