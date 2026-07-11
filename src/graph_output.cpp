@@ -1,5 +1,5 @@
 //
-// Created by Katie Barr (EI) on 12/10/2017.
+//Updated by Katie Barr on 11/07/2026.
 //
 // output/serialization logic split out of graph.cpp: reconstructing a linear
 // contig path (for a chosen haplotype or a homozygous subgraph) and writing it out.
