@@ -24,6 +24,7 @@ private:
     std::vector <std::string> unused_barcodes;
     void add_barcode_vote(std::string, std::string, int);
     std::map<std::string, std::vector <int> > edge_haplotype_dict;
+    // barcode -> edge name, kmer support
     std::map<std::string, std::map<std::string, int> > barcode_edge_mappings;
     std::vector<int>  winner_for_barcode(std::string barcode);
 

@@ -3,6 +3,7 @@
 //
 
 #include <numeric>
+#include <unordered_set>
 #include "haplotype_scorer.h"
 
 template <typename T, typename T2=T>
@@ -417,12 +418,15 @@ void HaplotypeScorer::decide_barcode_haplotype_support(){
 
     int support;
     int haplotypes_supported = 0;
+    std::vector<std::unordered_set<std::string> > haplotype_edge_sets(possible_haplotypes.size());
+    for (size_t i = 0; i < possible_haplotypes.size(); i++){
+        haplotype_edge_sets[i] = {possible_haplotypes[i].begin(), possible_haplotypes[i].end()};
+    }
     std::cout << "Calculating barcode haplotype support for " << barcode_edge_mappings.size() << " mappings"<< std::endl;
     for (auto &mapping:barcode_edge_mappings){
         //std::cout << "Checking barcode " << mapping.first <<std::endl;
         // if barcode maps to more than 1 edge in bubbles and maximum support is greater than 1
         //auto edge_support_max = std::max_element(std::begin(mapping.second), std::end(mapping.second), [] ( std::map<std::string, int> &p1,  std::map<std::string, int> &p2) {return p1.second < p2.second});
-        // if len(self.barcode_edge_mappings[barcode].keys()) > 1:
         if (mapping.second.size() > 1){ // if barcode maps to more than one edge
             std::vector<std::string> edges;
             std::vector<int> scores;
@@ -432,18 +436,12 @@ void HaplotypeScorer::decide_barcode_haplotype_support(){
             }
             if (*std::max_element(scores.begin(), scores.end())> 1) { 
                 for (int i = 0; i < possible_haplotypes.size(); i++) {
-                    std::vector<std::string> edges_in_haplotype;
-                    std::vector<std::string> h;
-                    h = possible_haplotypes[i];
+                    auto& hset = haplotype_edge_sets[i];
                     // find all edges in each haplotype that this barcode maps to
-                    for (auto e1: edges) {
-                        //edges_in_haplotype = [e for e in haplotype if e in edges]
-                        if (std::find(h.begin(), h.end(), e1) != h.end()) {
-                            edges_in_haplotype.push_back(e1);
-                        }
-                    }
+                    std::vector<std::string> edges_in_haplotype;
+                    std::copy_if(edges.begin(), edges.end(), std::back_inserter(edges_in_haplotype),
+                                 [&hset](const std::string& e1){ return hset.count(e1) > 0; });
                     // somewhat arbitrary rule to decide if the barcode supports a haplotype enough
-                    // if len(edges_in_haplotype)>= len(edges)/2 and len(edges_in_haplotype) > 1:
                     if (edges_in_haplotype.size() >= (edges.size() / 2) && edges_in_haplotype.size() > 1) {
                         support = 0;
                         for (auto a: edges_in_haplotype) {
