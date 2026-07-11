@@ -3,5 +3,5 @@ project(phaser)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
-set(SOURCE_FILES src/main.cpp src/graph.h src/graph.cpp src/haplotype_scorer.cpp src/haplotype_scorer.h)
+set(SOURCE_FILES src/main.cpp src/graph.h src/graph.cpp src/graph_output.cpp src/haplotype_scorer.cpp src/haplotype_scorer.h)
 add_executable(phaser ${SOURCE_FILES})

@@ -54,7 +54,6 @@ private:
     // (contig1, contig2) -> original (dir1, dir2) as read from the GFA link;
     // keyed by name pairs (not NodeEnd) since lookups only have the two names, not their strands
     std::map<std::pair<std::string, std::string>, std::pair<Strand, Strand> > original_edge_dirs;
-    std::vector<std::pair<std::string, bool> > find_next_edges(std::vector<std::pair<std::string, bool> >, std::vector<std::string> , std::vector<std::string> , std::set<NodeEnd> );
 public:
     void output_contigs_joined_to_contig_list(std::vector<std::string>, std::map<std::string, int >, std::string) const;
     std::set<std::string> edges;
