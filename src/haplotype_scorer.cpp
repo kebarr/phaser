@@ -6,50 +6,6 @@
 #include <unordered_set>
 #include "haplotype_scorer.h"
 
-template <typename T, typename T2=T>
-struct accumulator
-{
-    T2 sum; // we could plug in a more accurate type for the sum
-    T S;
-    T M;
-    size_t N;
-
-    // default constructor initializes all values
-    accumulator() : sum(0), S(0), M(0), N(0) { }
-
-    // add another number
-    T2 operator()(const T& x) {
-        ++N;
-        sum += x;
-        T Mprev = M;
-        M += (x - Mprev) / N;
-        S += (x - Mprev) * (x - M);
-        return sum;
-    }
-
-    T mean() const { return sum / N; }
-
-    T variance() const { return S / (N - 1); }
-
-    // operator<< to print the statistics to screen:
-    // denoted friend just to be able to write this inside
-    // the class definition and thus not to need to write
-    // the template specification of accumulator...
-    friend std::ostream& operator<<(std::ostream& out,
-                                    const accumulator& a)
-    {
-        if (a.N > 0)
-            out << "N\t\t\t= " << a.N << std::endl
-                << "sum\t\t\t= " << a.sum << std::endl
-                << "mean\t\t= " << std::fixed << std::setprecision(2) << a.mean() << std::endl;
-        if (a.N > 1)
-            out << "sd\t\t\t= " << std::fixed << std::setprecision(2) << std::sqrt(a.variance()) << std::endl;
-        else
-            out << "sd\t\t\t= " << std::fixed << std::setprecision(2) << 0 << std::endl;
-        return out;
-    }
-
-};
 
 
 double avg(std::vector<int> v){
@@ -74,23 +30,14 @@ double stdev(std::vector<int> v, double mean){
 HaplotypeScorer::HaplotypeScorer(std::string mapping_file, std::vector<std::vector <std::string> > possible_hs, Graph& g): graph(g){
     mapping_filename=mapping_file;
     possible_haplotypes=possible_hs;
-    std::set<std::string> edges;
     for (auto hap: possible_haplotypes){
         for (auto e: hap){
-            edges.insert(e); // names of all edges
+            haplotype_edges.insert(e); // names of all edges appearing in any haplotype
         }
     }
 
-    std::cout << "edges in haps: "<< edges.size() <<std::endl;
-    for (auto e:edges){
-        for (int i=0; i < possible_haplotypes.size(); i++){
-                if (std::find(possible_haplotypes[i].begin(), possible_haplotypes[i].end(), e) != possible_haplotypes[i].end()){
-                    edge_haplotype_dict[e].push_back(i); /// if e is in this possible haplotype then add its index
-                }
-        }
-    }
+    std::cout << "edges in haps: "<< haplotype_edges.size() <<std::endl;
     std::cout << "mappings " <<  mapping_filename <<std::endl;
-    std::cout << "edges in haplotypes: " << edge_haplotype_dict.size() <<std::endl;
     std::cout << std::endl;
 }
 
@@ -529,8 +476,8 @@ void HaplotypeScorer::write_output_success(std::string output_file){
 
 void HaplotypeScorer::add_barcode_vote(std::string barcode, std::string edge, int kmers){
     barcodes.insert(barcode);
-    if (edge_haplotype_dict.find(edge) != edge_haplotype_dict.end()){
-        // we only care about mappings to edges in bubbles, which will all have a key in the edge dict
+    if (haplotype_edges.find(edge) != haplotype_edges.end()){
+        // we only care about mappings to edges in bubbles, which will all be in haplotype_edges
         barcode_edge_mappings[barcode][edge] += kmers;
     } else if (std::find(graph.edges.begin(), graph.edges.end(), edge) != graph.edges.end()){
         barcode_hom_mappings[barcode] += kmers;

@@ -23,7 +23,8 @@ private:
     std::vector<std::vector <std::string> > possible_haplotypes;
     std::vector <std::string> unused_barcodes;
     void add_barcode_vote(std::string, std::string, int);
-    std::map<std::string, std::vector <int> > edge_haplotype_dict;
+    // every edge name that appears in any possible haplotype
+    std::set<std::string> haplotype_edges;
     // barcode -> edge name, kmer support
     std::map<std::string, std::map<std::string, int> > barcode_edge_mappings;
     std::vector<int>  winner_for_barcode(std::string barcode);
