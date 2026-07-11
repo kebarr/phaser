@@ -139,12 +139,12 @@ int main(int argc, char **argv) {
         std::cout << "Traversing from start edge " << start_edge << " in + direction" << std::endl;
         std::vector<std::string> traversed_edge_list;
         // traverse forwards 
-        graph.traverse_graph(start_edge, "+", traversed_edge_list);
+        graph.traverse_graph(start_edge, Strand::Plus, traversed_edge_list);
         std::cout << "Found " << graph.bubbles.size() << " bubbles from + direction" << std::endl;
         std::cout << "Traversing from start edge " << start_edge << " in - direction" << std::endl;
         traversed_edge_list.clear();
         // traverse backwards
-        graph.traverse_graph(start_edge, "-", traversed_edge_list);
+        graph.traverse_graph(start_edge, Strand::Minus, traversed_edge_list);
 
         std::cout << "Found " << graph.bubbles.size() << " bubbles  in total" << std::endl;
         if (graph.bubbles.size() > 1) {
