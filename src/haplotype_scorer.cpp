@@ -1,5 +1,5 @@
 //
-// Created by Katie Barr (EI) on 15/10/2017.
+// Created by Katie Barr on 11/07/2026.
 //
 
 #include <numeric>
@@ -459,8 +459,6 @@ void HaplotypeScorer::decide_barcode_haplotype_support(){
         } else {
             unused_barcodes.push_back(mapping.first);
         }
-        //std::cout << "barcode " << mapping.first << " supports " << haplotypes_supported << std::endl;
-
         haplotypes_supported = 0;
     }
     std::cout << "Calculated haplotype support for each barcode, " << barcode_haplotype_mappings.size() <<  std::endl;

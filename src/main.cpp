@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
         graph.traverse_graph(start_edge, Strand::Minus, traversed_edge_list);
 
         std::cout << "Found " << graph.bubbles.size() << " bubbles  in total" << std::endl;
-        if (graph.bubbles.size() > 1) {
+        if (graph.bubbles.size() > 1) { // A length-1 haplotype can never produce more than 1 matching edge, so that condition can never be satisfied
             std::vector<std::vector<std::string> > possible_haplotypes = graph.calculate_possible_haplotypes();
             std::cout << "found " << possible_haplotypes.size() << "candidate haplotypes of length "
                       << possible_haplotypes[0].size() << std::endl;
@@ -164,12 +164,16 @@ int main(int argc, char **argv) {
                     if (success == 0) {
                         std::cout << "Writing output" << std::endl;
                         haplotype_scorer.write_output_success(output_file);
+                        graph.write_output_subgraph(haplotype_scorer.winners.first, output_file + ".hap1.fasta", "hap1");
+                        graph.write_output_subgraph(haplotype_scorer.winners.second, output_file + ".hap2.fasta", "hap2");
                         phased_success += 1;
 
                     } else if (success == 1) { // if we're less confident about winner
                         std::cout << "Writing output" << std::endl;
 
                         haplotype_scorer.write_output_partial_success(output_file);
+                        graph.write_output_subgraph(haplotype_scorer.winners.first, "partial_" + output_file + ".hap1.fasta", "hap1");
+                        graph.write_output_subgraph(haplotype_scorer.winners.second, "partial_" + output_file + ".hap2.fasta", "hap2");
                         phased_partial_success += 1;
 
                     }
