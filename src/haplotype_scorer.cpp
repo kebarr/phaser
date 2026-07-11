@@ -49,14 +49,7 @@ struct accumulator
     }
 
 };
-/*
-void print_stuff_vect_int(std::vector<int> in){
-    auto a = accumulator<float,double>(); // Generate summary statistics for the offset distribution
-    for (auto element; in) {
-        a(element); // Call once per value
-    }
-    std::cout << a; // print statistics
-}*/
+
 
 double avg(std::vector<int> v){
     if (v.size() > 0) {
@@ -84,7 +77,7 @@ HaplotypeScorer::HaplotypeScorer(std::string mapping_file, std::vector<std::vect
     std::set<std::string> edges;
     for (auto hap: possible_haplotypes){
         for (auto e: hap){
-            edges.insert(e);
+            edges.insert(e); // names of all edges
         }
     }
 
@@ -92,7 +85,7 @@ HaplotypeScorer::HaplotypeScorer(std::string mapping_file, std::vector<std::vect
     for (auto e:edges){
         for (int i=0; i < possible_haplotypes.size(); i++){
                 if (std::find(possible_haplotypes[i].begin(), possible_haplotypes[i].end(), e) != possible_haplotypes[i].end()){
-                    edge_haplotype_dict[e].push_back(i);
+                    edge_haplotype_dict[e].push_back(i); /// if e is in this possible haplotype then add its index
                 }
         }
     }
@@ -266,7 +259,6 @@ int HaplotypeScorer::score_haplotypes(std::string outfile) {
     std::string barcode;
     for (auto &bm: barcode_haplotype_mappings) {
         barcode = bm.first;
-        // winner_for_this_barcode = [h for h in self.barcode_mappings[barcode] if self.barcode_mappings[barcode][h] == np.max(hap_support_dict.values())]
         std::vector<int> winners = winner_for_barcode(barcode); // ideally should be length 1
         for (auto winner:winners){
             int pair = possible_haplotypes.size() - 1 - winner;
@@ -561,22 +553,4 @@ void HaplotypeScorer::load_mappings_from_dict(std::map<std::string, std::map<std
             add_barcode_vote(barcode.first, edge, barcode.second);
         }
     }
-}
-
-void HaplotypeScorer::load_mappings() {
-    std::ifstream infile(mapping_filename);
-    std::string line;
-    std::string fields[3];
-    std::string barcode;
-    int counter = 0;
-    std::cout << "Loading mappings file " << mapping_filename << std::endl;
-    while (std::getline(infile, line)){
-        // read name, contig, number of kmers
-        std::istringstream(line) >> fields[0] >> fields[1] >> fields[2] ;
-        barcode = fields[0].substr(fields[0].find("_") + 1);
-        add_barcode_vote(barcode, fields[2], std::stoi(fields[1]));
-        counter += 1;
-
-    }
-    std::cout << "Loaded " << counter << " mappings from " << barcode_edge_mappings.size() << " barcodes" <<std::endl;
 }

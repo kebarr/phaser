@@ -19,18 +19,19 @@ std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
     // this assumes all bubbles have 2 contigs, but does not enforce it
     std::vector<std::string> first;
     std::vector<std::string> second;
-    first.push_back(std::get<0>(bubbles[0]));
-    second.push_back(std::get<1>(bubbles[0]));
-    haplotypes.push_back(first);
+    first.push_back(std::get<0>(bubbles[0])); // start contig of bubble
+    second.push_back(std::get<1>(bubbles[0])); // end contig of bubble
+    haplotypes.push_back(first); 
     haplotypes.push_back(second);
-    auto to_index = haplotypes.size();
-    auto from_index = haplotypes.size()/2;
+    auto to_index = haplotypes.size(); // number of haplotypes before adding next bubble
+    auto from_index = haplotypes.size()/2; 
     std::string b0;
     std::string b1;
     for (int j=1; j < bubbles.size(); j++){
-                b0 = std::get<0>(bubbles[j]);
-                to_index = haplotypes.size();
+                b0 = std::get<0>(bubbles[j]); // name of contig at start of bubble
+                to_index = haplotypes.size(); // all the haplotypes pre doubling, add first possible allele to these
         std::vector<std::vector <std::string> > new_haplotypes;
+                // duplicate each time eas each possible haplotype must include every possible traversal though the graph
                 for (auto hap: haplotypes) {
                     new_haplotypes.push_back(hap);
                 }
@@ -39,11 +40,11 @@ std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
                 }
                 haplotypes = new_haplotypes;
                 for (int i = 0; i < to_index; i++) {
-                    haplotypes[i].push_back(b0);
+                    haplotypes[i].push_back(b0); // start contig for each possible haplotype
                 }
                 b1 = std::get<1>(bubbles[j]);
 
-                from_index = (haplotypes.size()) / 2;
+                from_index = (haplotypes.size()) / 2; // all the haplotypes post doubling, add second possible allele to these
                 for (int i = from_index; i < haplotypes.size(); i++) {
                     haplotypes[i].push_back(b1);
                 }

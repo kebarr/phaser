@@ -34,6 +34,7 @@ public:
     std::vector<std::pair< std::string, std::string> > bubbles;
     std::set<std::string>  edges_in_bubbles;
     std::pair<std::string, std::string> check_bubble(std::pair<std::string, std::string>, std::vector<std::pair<std::string, std::string> > );
+    // edge list maps [contig, direction] -> contig, direction its connected to
     std::map < std::pair<std::string, std::string> , std::set<std::pair<std::string, std::string> > > edge_list;
     void traverse_graph(std::string, std::string, std::vector<std::string >&);
     Graph();

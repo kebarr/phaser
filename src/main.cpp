@@ -117,8 +117,6 @@ int main(int argc, char **argv) {
     int phased_partial_success = 0;
     int exceptions = 0;
     int no_mappings = 0;
-    // this should be a oarallel for
-    # pragma omp parallel for
     while (std::getline(infile, line)) {
         graphs += 1;
         if (!(std::istringstream(line) >> fields[0] >> fields[1])) {
@@ -140,10 +138,12 @@ int main(int argc, char **argv) {
         graph.load_gfa(graph_filename);
         std::cout << "Traversing from start edge " << start_edge << " in + direction" << std::endl;
         std::vector<std::string> traversed_edge_list;
+        // traverse forwards 
         graph.traverse_graph(start_edge, "+", traversed_edge_list);
         std::cout << "Found " << graph.bubbles.size() << " bubbles from + direction" << std::endl;
         std::cout << "Traversing from start edge " << start_edge << " in - direction" << std::endl;
         traversed_edge_list.clear();
+        // traverse backwards
         graph.traverse_graph(start_edge, "-", traversed_edge_list);
 
         std::cout << "Found " << graph.bubbles.size() << " bubbles  in total" << std::endl;
@@ -164,22 +164,12 @@ int main(int argc, char **argv) {
                     if (success == 0) {
                         std::cout << "Writing output" << std::endl;
                         haplotype_scorer.write_output_success(output_file);
-                        //graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners), "sequences1" + output_file + ".gfa",
-                        //"haplotype1");
-                        //graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners), "sequences2" + output_file + ".gfa",
-                        //"haplotype2");
                         phased_success += 1;
 
                     } else if (success == 1) { // if we're less confident about winner
                         std::cout << "Writing output" << std::endl;
 
                         haplotype_scorer.write_output_partial_success(output_file);
-                        //graph.write_output_subgraph(std::get<0>(haplotype_scorer.winners),
-                        //"partial_sequences1" + output_file + ".gfa",
-                        //"haplotype1");
-                        //graph.write_output_subgraph(std::get<1>(haplotype_scorer.winners),
-                        //"partial_sequences2" + output_file + ".gfa",
-                        //"haplotype2");
                         phased_partial_success += 1;
 
                     }
