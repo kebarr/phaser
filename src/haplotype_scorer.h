@@ -37,8 +37,8 @@ public:
     void write_output_partial_success(std::string);
     std::set <std::string> barcodes;
     std::string mapping_filename;
-    Graph graph;
-    HaplotypeScorer(std::string, std::vector<std::vector <std::string> >, Graph);
+    const Graph& graph;
+    HaplotypeScorer(std::string, std::vector<std::vector <std::string> >, Graph&);
     void print_summary(std::string, std::vector<std::pair<int, int> >, std::vector<std::pair<int, int> >, std::vector<int>, std::vector<int>, std::vector<int>);
     void print_pair_summary(std::string, std::vector<std::pair<std::pair<int, int>, int > >, std::vector<std::pair<std::pair<int, int>, int > > , std::vector<int>, std::vector<int>, std::vector<int> );
     void load_mappings_from_dict(std::map<std::string, std::map<std::string, int> > &);

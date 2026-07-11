@@ -28,7 +28,7 @@ private:
     std::map<std::pair<std::string, std::string>, std::pair<std::string, std::string> > original_edge_dirs;
     std::vector<std::pair<std::string, bool> > find_next_edges(std::vector<std::pair<std::string, bool> >, std::vector<std::string> , std::vector<std::string> , std::set<std::pair<std::string, std::string> > );
 public:
-    void output_contigs_joined_to_contig_list(std::vector<std::string>, std::map<std::string, int >, std::string);
+    void output_contigs_joined_to_contig_list(std::vector<std::string>, std::map<std::string, int >, std::string) const;
     std::set<std::string> edges;
     std::map<std::string, std::string>  nodes;
     std::vector<std::pair< std::string, std::string> > bubbles;
@@ -39,11 +39,11 @@ public:
     void traverse_graph(std::string, std::string, std::vector<std::string >&);
     Graph();
     std::vector<std::vector <std::string> >  calculate_possible_haplotypes(void);
-    bool can_output_graph_sequence(std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > > );
+    bool can_output_graph_sequence(std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > > ) const;
     void load_gfa(std::string);
     // easiest way to actually get phase string is get output sub gfa for each haplotype and stitch together
     void write_output_subgraph(std::vector<std::string> , std::string, std::string  );
-    std::pair<std::string, std::string> find_start_edge(std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > >  );
+    std::pair<std::string, std::string> find_start_edge(std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > >  ) const;
 
     void write_sequences_to_file(std::string , std::string,std::vector<std::pair<std::string, bool> > );
 };

@@ -125,7 +125,7 @@ void Graph::write_output_subgraph(std::vector<std::string> bubble_edges, std::st
         auto e =  next_edge[0];
         auto edge_name = std::get<0>(e);
         std::string current_dir = std::get<1>(e);
-        auto edge_leaving_other_way = edges_to_include[std::make_pair(edge_name, switch_pm[current_dir])];
+        auto edge_leaving_other_way = edges_to_include[std::make_pair(edge_name, switch_pm.at(current_dir))];
         while (edge_leaving_other_way.size() != 0) {
             if (current_dir == previous_dir) {
                 edges_to_output.push_back(std::make_pair(edge_name, false));
@@ -158,9 +158,9 @@ void Graph::write_sequences_to_file(std::string output_filename, std::string seq
     out << ">" << sequence_name << std::endl << sequence << std::endl;
 }
 
-std::pair<std::string, std::string> Graph::find_start_edge(std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > >  edges_to_subgraph){
+std::pair<std::string, std::string> Graph::find_start_edge(std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > >  edges_to_subgraph) const{
     for (auto e: edges_to_subgraph){
-        std::pair<std::string, std::string> inverse_links = std::make_pair(std::get<0>(e.first), switch_pm[std::get<1>(e.first)]);
+        std::pair<std::string, std::string> inverse_links = std::make_pair(std::get<0>(e.first), switch_pm.at(std::get<1>(e.first)));
         if (e.second.size() == 0 or edges_to_subgraph.find(inverse_links) == edges_to_subgraph.end()){
             std::pair<std::string, std::string> start_edge = std::make_pair(std::get<0>(e.first), std::get<1>(e.first));
             return start_edge;
@@ -169,7 +169,7 @@ std::pair<std::string, std::string> Graph::find_start_edge(std::map < std::pair<
     return std::make_pair("","");
 }
 
-bool Graph::can_output_graph_sequence(std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > >  edges){
+bool Graph::can_output_graph_sequence(std::map < std::pair<std::string, std::string> , std::vector<std::pair<std::string, std::string> > >  edges) const{
     std::map<std::string, std::set<std::string> > edges_start;
     std::map<std::string, std::set<std::string> > edges_end;
     // edge dict replicates links- have from_link, from_start_end : to_link to_start_end
@@ -218,7 +218,7 @@ void Graph::load_gfa(std::string infile_name){
             std::pair<std::string, std::string> value_fwd = std::make_pair(fields[3], fields[4]);
             // need to store both ways around to ensure every edge connected to a given node is traversed
             std::pair<std::string, std::string> value_bwd = std::make_pair(fields[1], switch_pm[fields[2]]);
-            std::pair<std::string, std::string> inverse_link = std::make_pair(fields[3], switch_pm[fields[4]]);                                                                                                                                                                                                      edge_list[fields[1]].push_back(value_fwd);
+            std::pair<std::string, std::string> inverse_link = std::make_pair(fields[3], switch_pm[fields[4]]);
             edge_list[std::make_pair(fields[1], fields[2])].insert(value_fwd);
             edge_list[inverse_link].insert(value_bwd);
             std::pair<std::string, std::string>  pms = std::make_pair(fields[2], fields[4]);
@@ -260,7 +260,7 @@ std::pair<std::string, std::string> Graph::check_bubble(std::pair<std::string, s
 
 }
 
-void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble_edges, std::map<std::string, int > agreeing_barcodes, std::string outfile_name){
+void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble_edges, std::map<std::string, int > agreeing_barcodes, std::string outfile_name) const{
     // need to be able to reconstruct each haplotype sequence, phaser just outputs contig chcoices, so need inbetween links
     std::vector<std::string> hom_edges;
     for (auto edge:edges){
@@ -299,7 +299,7 @@ void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble
         auto e = next_edge[0];
         auto edge_name = std::get<0>(e);
         std::string current_dir = std::get<1>(e);
-        auto edge_leaving_other_way = edges_to_include[std::make_pair(edge_name, switch_pm[current_dir])];
+        auto edge_leaving_other_way = edges_to_include[std::make_pair(edge_name, switch_pm.at(current_dir))];
         while (edge_leaving_other_way.size() != 0) {
             edges_to_output.push_back(edge_name);
             edge_leaving_other_way = edges_to_include[std::make_pair(edge_name, current_dir)];
@@ -312,11 +312,11 @@ void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble
             auto edge = edges_to_output[i];
             auto next_edge = edges_to_output[i+1];
             if (original_edge_dirs.find(std::make_pair(edge, next_edge)) != original_edge_dirs.end()){
-                auto dir = std::get<0>(original_edge_dirs[std::make_pair(edge, next_edge)]);
+                auto dir = std::get<0>(original_edge_dirs.at(std::make_pair(edge, next_edge)));
                 out << edge << dir << ",";
             } else if (original_edge_dirs.find(std::make_pair(next_edge, edge)) != original_edge_dirs.end()){
                 // if original link was in opposite dir, need to switch plus/minus
-                auto dir = switch_pm[std::get<0>(original_edge_dirs[std::make_pair(next_edge, edge)])];
+                auto dir = switch_pm.at(std::get<0>(original_edge_dirs.at(std::make_pair(next_edge, edge))));
                 out << edge << dir << ",";
             }
         }

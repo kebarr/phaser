@@ -70,10 +70,9 @@ double stdev(std::vector<int> v, double mean){
 }
 
 
-HaplotypeScorer::HaplotypeScorer(std::string mapping_file, std::vector<std::vector <std::string> > possible_hs, Graph g){
+HaplotypeScorer::HaplotypeScorer(std::string mapping_file, std::vector<std::vector <std::string> > possible_hs, Graph& g): graph(g){
     mapping_filename=mapping_file;
     possible_haplotypes=possible_hs;
-    graph = g;
     std::set<std::string> edges;
     for (auto hap: possible_haplotypes){
         for (auto e: hap){
@@ -424,17 +423,14 @@ void HaplotypeScorer::decide_barcode_haplotype_support(){
         // if barcode maps to more than 1 edge in bubbles and maximum support is greater than 1
         //auto edge_support_max = std::max_element(std::begin(mapping.second), std::end(mapping.second), [] ( std::map<std::string, int> &p1,  std::map<std::string, int> &p2) {return p1.second < p2.second});
         // if len(self.barcode_edge_mappings[barcode].keys()) > 1:
-        if (mapping.second.size() > 1){
-            //edge_support = {edge:self.barcode_edge_mappings[barcode][edge] for edge in self.barcode_edge_mappings[barcode] if edge in self.graph.edge_bubble_dict.keys()}
+        if (mapping.second.size() > 1){ // if barcode maps to more than one edge
             std::vector<std::string> edges;
             std::vector<int> scores;
-            for (auto e: mapping.second){
-                edges.push_back(e.first);
+            for (auto e: mapping.second){ // add each edge that barcode traverses and its score
+                edges.push_back(e.first); 
                 scores.push_back(e.second);
             }
-            // elif len(edges) > 1 and np.max(edge_support.values()) > 1:
-            if (*std::max_element(scores.begin(), scores.end())> 1) {
-                //  for i, haplotype in enumerate(self.list_of_possible_haplotypes)
+            if (*std::max_element(scores.begin(), scores.end())> 1) { 
                 for (int i = 0; i < possible_haplotypes.size(); i++) {
                     std::vector<std::string> edges_in_haplotype;
                     std::vector<std::string> h;
