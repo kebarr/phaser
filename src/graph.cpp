@@ -327,36 +327,43 @@ void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble
 
 //TODO: seen at least one example of this stopping one edge earlier than needed
 void Graph::traverse_graph(std::string start_node, Strand in_dir, std::vector<std::string > &traversed_edge_list){
-    // recursive function tht traverses graph, in specified direction and gets the next node, if only 1 node (so no phasing required) go to next node
+    // iterative: traverses graph in specified direction, advancing to the next node when only
+    // 1 node is found (so no phasing required). written as a loop rather than recursion since
+    // every recursive call here was a tail call and a long contig chain could otherwise overflow the stack
     // i replicated the links to ensure every on is a key in the dict- now means we can go same way when supposed to go oppotite ways
     // get nodes joined from other direction- so when we start g
-    NodeEnd node{start_node, flip(in_dir)}; // should probably just feed this in as a parameter
-    std::set<NodeEnd> adjacent_nodes = edge_list[node]; // all edges collected to this nde
-    std::vector<NodeEnd> adjacent_nodes_vector(adjacent_nodes.begin(), adjacent_nodes.end());
-    if (adjacent_nodes.size() == 0){// we can traverse no further
-        return;
-    } else if (adjacent_nodes.size() == 1 && std::find(traversed_edge_list.begin(), traversed_edge_list.end(), adjacent_nodes_vector[0].name) == traversed_edge_list.end()){
-        //travers to next contig
-        traversed_edge_list.push_back(adjacent_nodes_vector[0].name);
-        traverse_graph(adjacent_nodes_vector[0].name, flip(adjacent_nodes_vector[0].strand), traversed_edge_list);
-    } else if (std::find(traversed_edge_list.begin(), traversed_edge_list.end(), adjacent_nodes_vector[0].name)== traversed_edge_list.end()
-        && std::find(traversed_edge_list.begin(), traversed_edge_list.end(), adjacent_nodes_vector[1].name)== traversed_edge_list.end()){
-        // if there are two adjecent nodes that share the same end point
-        traversed_edge_list.push_back(adjacent_nodes_vector[0].name);
-        traversed_edge_list.push_back(adjacent_nodes_vector[1].name);
+    while (true) {
+        NodeEnd node{start_node, flip(in_dir)};
+        std::set<NodeEnd> adjacent_nodes = edge_list[node]; // all edges collected to this nde
+        std::vector<NodeEnd> adjacent_nodes_vector(adjacent_nodes.begin(), adjacent_nodes.end());
+        if (adjacent_nodes.size() == 0){// we can traverse no further
+            return;
+        } else if (adjacent_nodes.size() == 1 && std::find(traversed_edge_list.begin(), traversed_edge_list.end(), adjacent_nodes_vector[0].name) == traversed_edge_list.end()){
+            //travers to next contig
+            traversed_edge_list.push_back(adjacent_nodes_vector[0].name);
+            start_node = adjacent_nodes_vector[0].name;
+            in_dir = flip(adjacent_nodes_vector[0].strand);
+        } else if (std::find(traversed_edge_list.begin(), traversed_edge_list.end(), adjacent_nodes_vector[0].name)== traversed_edge_list.end()
+            && std::find(traversed_edge_list.begin(), traversed_edge_list.end(), adjacent_nodes_vector[1].name)== traversed_edge_list.end()){
+            // if there are two adjecent nodes that share the same end point they might be a bubble
+            traversed_edge_list.push_back(adjacent_nodes_vector[0].name);
+            traversed_edge_list.push_back(adjacent_nodes_vector[1].name);
 
-        NodeEnd contig_other_end_bubble = check_bubble(node, adjacent_nodes_vector);
-        if (!contig_other_end_bubble.name.empty()){
-            //!!!!!! not enforcing bubble degree, but this assumes deg 2....
-            // really lazy but easiest way to check if edge is hom/het for output
-            edges_in_bubbles.insert(adjacent_nodes_vector[0].name);
-            edges_in_bubbles.insert(adjacent_nodes_vector[1].name);
-            bubbles.push_back(std::make_pair(adjacent_nodes_vector[0].name, adjacent_nodes_vector[1].name));
-                    /// continue traversing from other end of bubble
-            traverse_graph(contig_other_end_bubble.name, flip(contig_other_end_bubble.strand), traversed_edge_list);
+            NodeEnd contig_other_end_bubble = check_bubble(node, adjacent_nodes_vector);
+            if (!contig_other_end_bubble.name.empty()){
+                // really lazy but easiest way to check if edge is hom/het for output
+                edges_in_bubbles.insert(adjacent_nodes_vector[0].name);
+                edges_in_bubbles.insert(adjacent_nodes_vector[1].name);
+                bubbles.push_back(std::make_pair(adjacent_nodes_vector[0].name, adjacent_nodes_vector[1].name));
+                /// continue traversing from other end of bubble
+                start_node = contig_other_end_bubble.name;
+                in_dir = flip(contig_other_end_bubble.strand);
+            } else {
+                // if we've hit something that is not a bubble, we can't phase further, so exit
+                return;
+            }
         } else {
-            // if we've hit something that is not a bubble, we can't phase further, so exit
-
+            // neither branch above matched (e.g. >2 adjacent nodes, or already traversed) - nothing more to do
             return;
         }
     }
