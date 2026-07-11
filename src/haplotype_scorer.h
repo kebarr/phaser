@@ -1,5 +1,5 @@
 //
-// Created by Katie Barr (EI) on 15/10/2017.
+// Updated by Katie Barr on 11/07/2026.
 //
 
 #ifndef PHASER_HAPLOTYPE_SCORER_H

@@ -5,28 +5,28 @@
 // contig path (for a chosen haplotype or a homozygous subgraph) and writing it out.
 
 #include <tuple>
+#include <unordered_set>
 #include "graph.h"
 
 
 void Graph::write_output_subgraph(std::vector<std::string> bubble_edges, std::string output_file, std::string sequence_name) {
-    std::vector<std::string> hom_edges;
+    std::unordered_set<std::string> hom_edges;
     for (auto edge:edges){
-        if (std::find(edges_in_bubbles.begin(), edges_in_bubbles.end(), edge) == edges_in_bubbles.end()){
-            hom_edges.push_back(edge);
+        if (edges_in_bubbles.find(edge) == edges_in_bubbles.end()){
+            hom_edges.insert(edge);
         }
     }
+    std::unordered_set<std::string> bubble_edge_set(bubble_edges.begin(), bubble_edges.end());
     std::map <NodeEnd, std::vector<NodeEnd> > edges_to_include;
     // easier- just go through all links- if its a hom link, or included in bubble edges, take it
     for (auto link:edge_list){
         std::string e1_name = link.first.name;
         for (auto joined_to: link.second) {
             std::string e2_name = joined_to.name;
-            if (std::find(hom_edges.begin(), hom_edges.end(), e1_name) != hom_edges.end() &&
-                std::find(bubble_edges.begin(), bubble_edges.end(), e2_name) != bubble_edges.end()) {
+            if (hom_edges.count(e1_name) && bubble_edge_set.count(e2_name)) {
                 // then this link should be included
                 edges_to_include[link.first].push_back(joined_to);
-            } else if (std::find(hom_edges.begin(), hom_edges.end(), e2_name) != hom_edges.end() &&
-                       std::find(bubble_edges.begin(), bubble_edges.end(), e1_name) != bubble_edges.end()) {
+            } else if (hom_edges.count(e2_name) && bubble_edge_set.count(e1_name)) {
                 edges_to_include[link.first].push_back(joined_to);
 
             }
@@ -119,12 +119,13 @@ bool Graph::can_output_graph_sequence(std::map <NodeEnd, std::vector<NodeEnd> > 
 
 void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble_edges, std::map<std::string, int > agreeing_barcodes, std::string outfile_name) const{
     // need to be able to reconstruct each haplotype sequence with its winning contig, phaser just outputs contig choices, so need inbetween links
-    std::vector<std::string> hom_edges;
+    std::unordered_set<std::string> hom_edges;
     for (auto edge:edges){
-        if (std::find(edges_in_bubbles.begin(), edges_in_bubbles.end(), edge) == edges_in_bubbles.end()){
-            hom_edges.push_back(edge); // all homozygous edges
+        if (edges_in_bubbles.find(edge) == edges_in_bubbles.end()){
+            hom_edges.insert(edge); // all homozygous edges
         }
     }
+    std::unordered_set<std::string> bubble_edge_set(bubble_edges.begin(), bubble_edges.end());
     std::map <NodeEnd, std::vector<NodeEnd> > edges_to_include;
     // easier- just go through all links- if its a hom link, or included in bubble edges, take it
     for (auto link:edge_list){
@@ -132,13 +133,11 @@ void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble
         for (auto joined_to: link.second) {
             std::string e2_name = joined_to.name;
             // keep a link only if it connects a homozygous contig to this haplotype's chosen bubble allele — i.e. the boundary edges where a hom stretch meets the specific allele this haplotype picked. That's needed because possible_haplotypes only lists the bubble alleles in isolation; to actually reconstruct a full contig path you need to find what hom contig each chosen allele attaches to on either side.
-            if (std::find(hom_edges.begin(), hom_edges.end(), e1_name) != hom_edges.end() &&
-                std::find(bubble_edges.begin(), bubble_edges.end(), e2_name) != bubble_edges.end()) {
+            if (hom_edges.count(e1_name) && bubble_edge_set.count(e2_name)) {
                 // if first contig is not in homologous edges and second contig is not in bubble edges join them
                 // then this link should be included
                 edges_to_include[link.first].push_back(joined_to);
-            } else if (std::find(hom_edges.begin(), hom_edges.end(), e2_name) != hom_edges.end() &&
-                       std::find(bubble_edges.begin(), bubble_edges.end(), e1_name) != bubble_edges.end()) {
+            } else if (hom_edges.count(e2_name) && bubble_edge_set.count(e1_name)) {
                 edges_to_include[link.first].push_back(joined_to);
 
             }
