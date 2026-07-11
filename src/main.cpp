@@ -9,16 +9,14 @@
 //#define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
 
-#include "../deps/cxxopts/include/cxxopts.hpp"
 #include "graph.h"
 #include "haplotype_scorer.h"
 
-Graph load_subgraph(std::string subgraph_filename){
-    std::ifstream subgraph(subgraph_filename);
-
-}
-
 bool check_or_create_directory(std::string &output_prefix) {
+    if (output_prefix.empty()) {
+        std::cout << "Error: output prefix must not be empty" << std::endl;
+        return false;
+    }
     if (output_prefix.back() != '/') {
         output_prefix.push_back('/');
     }
@@ -50,12 +48,22 @@ std::map<std::string, std::map<std::string, int> > load_mappings(std::string map
     std::string barcode;
     int counter = 0;
     std::cout << "Loading mappings file " << mapping_filename << std::endl;
+    // contig name -> barcode -> [number of kmers]
     std::map<std::string, std::map<std::string, int> > mappings;
     while (std::getline(infile, line)){
-        // read name, contig, number of kmers
-        std::istringstream(line) >> fields[0] >> fields[1] >> fields[2] ;
+        // read name, number of kmerscontig name
+        if (!(std::istringstream(line) >> fields[0] >> fields[1] >> fields[2])) {
+            std::cout << "Warning: skipping malformed mappings line: " << line << std::endl;
+            continue;
+        }
+        // extract barcode from read name, we know that reads with same barcode are from same chromosome
         barcode = fields[0].substr(fields[0].find("_") + 1);
-        mappings[fields[2]][barcode] += std::stoi(fields[1]);
+        try {
+            mappings[fields[2]][barcode] += std::stoi(fields[1]);
+        } catch (const std::exception &e) {
+            std::cout << "Warning: skipping mappings line with non-numeric kmer count: " << line << std::endl;
+            continue;
+        }
         counter += 1;
 
     }
@@ -65,64 +73,34 @@ std::map<std::string, std::map<std::string, int> > load_mappings(std::string map
 
 int main(int argc, char **argv) {
 
-    const unsigned int GB(1024 * 1024 * 1024);
-    unsigned int mem_limit(10);
+    if (argc != 4) {
+        std::cout << "Usage: " << argv[0] << " <graph_file_list> <mappings_file> <output_prefix>" << std::endl;
+        return 1;
+    }
 
-    std::string graph_file_list;
-    std::string mappings_filename;
-    std::string output_file_pref;
+    std::string graph_file_list(argv[1]);
+    std::string mappings_filename(argv[2]);
+    std::string output_file_pref(argv[3]);
 
-    graph_file_list = argv[1];
-    mappings_filename = argv[2];
-    output_file_pref = argv[3];
-    /*try {
-        std::time_t t = std::time(nullptr);
-        std::tm tm = *std::localtime(&t);
-        std::string outdefault(
-                std::to_string(tm.tm_year + 1900) + '-' + std::to_string(tm.tm_mon) + '-' + std::to_string(tm.tm_mday) +
-                '_' + std::to_string(tm.tm_hour) + std::to_string(tm.tm_min));
-
-        cxxopts::Options options("phaser", "Phase part of a graph based on kmer mapping");
-
-        options.add_options()("help", "Print help")("g, graph", "Graph to phase",
-                                                    cxxopts::value<std::string>(graph_filename), "GFA - Graph file")(
-                "m,mappings", "Mappings used to phase graph",
-                cxxopts::value<std::string>(mappings_filename), "Mappings")("s,start",
-                                                                            "Edge to start on",
-                                                                            cxxopts::value<std::string>(
-                                                                                    start_edge),
-                                                                            "Start");
-
-        options.add_options("Output file")("o,output", "Output proposed phasing",
-                                           cxxopts::value<std::string>(output_file), "Output file");
-
-        options.parse(argc, argv);
-
-        if (0 != options.count("help")) {
-            std::cout << options.help({"", "Performance"}) << std::endl;
-            exit(0);
+    {
+        std::ifstream check(mappings_filename);
+        if (!check.is_open()) {
+            std::cout << "Error: could not open mappings file " << mappings_filename << std::endl;
+            return 1;
         }
-        if (options.count("o") != 1 /*or options.count("i")<2) {
-            std::cout << "Error: please specify input files and output prefix" << std::endl
-                      << " Use option --help to check command line arguments." << std::endl;
-            exit(1);
+    }
+    {
+        std::ifstream check(graph_file_list);
+        if (!check.is_open()) {
+            std::cout << "Error: could not open graph file list " << graph_file_list << std::endl;
+            return 1;
         }
+    }
+    if (!check_or_create_directory(output_file_pref)) {
+        std::cout << "Error: could not create or access output directory " << output_file_pref << std::endl;
+        return 1;
+    }
 
-
-        if (graph_filename.empty()) {
-            std::cout << "Error: The GFA file parameter wasn't specified, " << std::endl
-                      << "Use option --help to check command line arguments." << std::endl;
-            exit(1);
-        }
-        if (mappings_filename.empty()) {
-            std::cout << "Error: The mapping file parameter wasn't specified, " << std::endl
-                      << "Use option --help to check command line arguments." << std::endl;
-            exit(1);
-        }
-    } catch (const cxxopts::OptionException &e) {
-        std::cout << "error parsing options: " << e.what() << std::endl;
-        exit(1);
-    }*/
     // actually should do it with choice of single gfa or mapping file list
     // loading entire mappings file each time takes ages- better strategy is to lload whole thing
     // take list of gfas, and loop from in here
@@ -143,7 +121,10 @@ int main(int argc, char **argv) {
     # pragma omp parallel for
     while (std::getline(infile, line)) {
         graphs += 1;
-        std::istringstream(line) >> fields[0] >> fields[1];
+        if (!(std::istringstream(line) >> fields[0] >> fields[1])) {
+            std::cout << "Warning: skipping malformed graph list line: " << line << std::endl;
+            continue;
+        }
         graph_filename = fields[0];
         start_edge = fields[1];
         std::cout << "----------------------------------------" << std::endl;

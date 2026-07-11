@@ -9,10 +9,7 @@
 Graph::Graph(){
     std::vector<std::vector <int> > bubbles;
 }
-/*
-void Graph::add_bubble(std::vector <int> bubble){
-    bubbles.push_back(bubble);
-}*/
+
 
 std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
     std::vector<std::vector <std::string> > haplotypes;
@@ -211,19 +208,17 @@ void Graph::load_gfa(std::string infile_name){
     int counter = 0;
     std::cout << "Loading GFA file " << infile_name << std::endl;
     while (std::getline(infile, line)){
+        // GFA is type (link or seq); start contig name; direction; end contig name; direction
         std::istringstream(line) >> fields[0] >> fields[1] >> fields[2] >> fields[3] >> fields[4];
         // to traverse graph only links are required
         if (fields[0] == "L"){
-            edges.insert(fields[1]);
-            edges.insert(fields[3]);
+            edges.insert(fields[1]); // start contig
+            edges.insert(fields[3]); // end contig
             std::pair<std::string, std::string> value_fwd = std::make_pair(fields[3], fields[4]);
             // need to store both ways around to ensure every edge connected to a given node is traversed
             std::pair<std::string, std::string> value_bwd = std::make_pair(fields[1], switch_pm[fields[2]]);
-            std::pair<std::string, std::string> inverse_link = std::make_pair(fields[3], switch_pm[fields[4]]);
-            //std::string t = switch_pm[fields[2]];
-            //std::tuple<std::string, std::string> value_bwd = std::make_tuple(t, t);                                                                                                                                                                                                       edge_list[fields[1]].push_back(value_fwd);
+            std::pair<std::string, std::string> inverse_link = std::make_pair(fields[3], switch_pm[fields[4]]);                                                                                                                                                                                                      edge_list[fields[1]].push_back(value_fwd);
             edge_list[std::make_pair(fields[1], fields[2])].insert(value_fwd);
-            //std::pair<std::string, std::string> inverse_link = std::make_pair(fields[3], switch_pm[fields[4]]);
             edge_list[inverse_link].insert(value_bwd);
             std::pair<std::string, std::string>  pms = std::make_pair(fields[2], fields[4]);
             original_edge_dirs[std::make_pair(fields[1], fields[3])] = pms;
@@ -334,10 +329,11 @@ void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble
 
 //TODO: seen at least one example of this stopping one edge earlier than needed
 void Graph::traverse_graph(std::string start_node, std::string in_dir, std::vector<std::string > &traversed_edge_list){
+    // recursive function tht traverses graph, in specified direction and gets the next node, if only 1 node (so no phasing required) go to next node
     // i replicated the links to ensure every on is a key in the dict- now means we can go same way when supposed to go oppotite ways
     // get nodes joined from other direction- so when we start g
     std::pair<std::string, std::string> node = std::make_pair(start_node, switch_pm[in_dir]) ;// should probably just feed this in as aprameter
-    std::set<std::pair<std::string, std::string> > adjacent_nodes = edge_list[node];
+    std::set<std::pair<std::string, std::string> > adjacent_nodes = edge_list[node]; // all edges collected to this nde
     std::vector<std::pair<std::string, std::string> > adjacent_nodes_vector;
     for (auto n: adjacent_nodes){
         adjacent_nodes_vector.push_back(n);
@@ -350,6 +346,7 @@ void Graph::traverse_graph(std::string start_node, std::string in_dir, std::vect
         traverse_graph(std::get<0>(adjacent_nodes_vector[0]), switch_pm[std::get<1>(adjacent_nodes_vector[0])], traversed_edge_list);
     } else if (std::find(traversed_edge_list.begin(), traversed_edge_list.end(), std::get<0>(adjacent_nodes_vector[0]))== traversed_edge_list.end()
         && std::find(traversed_edge_list.begin(), traversed_edge_list.end(), std::get<0>(adjacent_nodes_vector[1]))== traversed_edge_list.end()){
+        // if there are two adjecent nodes that share the same end point
         traversed_edge_list.push_back(std::get<0>(adjacent_nodes_vector[0]));
         traversed_edge_list.push_back(std::get<0>(adjacent_nodes_vector[1]));
 
