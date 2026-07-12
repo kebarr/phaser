@@ -18,12 +18,8 @@ std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
     }
     // this assumes all bubbles have 2 contigs, but does not enforce it
     int bubble_degree;
-    bubble_degree = bubbles[0].size();
-    for (int j=1; j < bubbles[0].size(); j++){
-        haplotypes.push_back(bubbles[0][j]);
-    }
     std::string bubble_edge_name;
-    for (int j=1; j < bubbles.size(); j++){// for each bubble
+    for (int j=0; j < bubbles.size(); j++){// for each bubble
         bubble_degree = bubbles[j].size();
         std::vector<std::vector <std::string> > new_haplotypes;
         for (int i = 0; i < bubble_degree; i++){
@@ -96,13 +92,18 @@ NodeEnd Graph::check_bubble(NodeEnd origniating_edge, std::vector<NodeEnd> adjac
 
 }
 
-//TODO: seen at least one example of this stopping one edge earlier than needed
 void Graph::traverse_graph(std::string start_node, Strand in_dir, std::vector<std::string > &traversed_edge_list){
     // iterative: traverses graph in specified direction, advancing to the next node when only
+    std::string last_traversed_edge;
+    last_traversed_edge = traversed_edge_list.back();
     while (true) {
         NodeEnd node{start_node, flip(in_dir)}; /// converts "the end I arrived at start_node through" into "the end I need to leave start_node through," because that's the key edge_list actually indexes on.
         std::set<NodeEnd> adjacent_nodes = edge_list[node]; // all edges collected to this nde
         std::vector<NodeEnd> adjacent_nodes_vector(adjacent_nodes.begin(), adjacent_nodes.end());
+        std::set<std::string> adjacent_node_names;
+        for (auto node: adjacent_nodes_vector){
+            adjacent_node_names.insert(node.name);
+        }
         if (adjacent_nodes.size() == 0){// we can traverse no further
             return;
         } else if (adjacent_nodes.size() == 1 && std::find(traversed_edge_list.begin(), traversed_edge_list.end(), adjacent_nodes_vector[0].name) == traversed_edge_list.end()){
@@ -112,8 +113,7 @@ void Graph::traverse_graph(std::string start_node, Strand in_dir, std::vector<st
             start_node = adjacent_nodes_vector[0].name;
             in_dir = flip(adjacent_nodes_vector[0].strand);  // e next contig and the specific end of it that this link attaches to (its arrival end, from the neighbor's perspective). Flipping it before storing it in in_dir keeps the invariant intact for the next lap: at the top of the loop, line 336 will flip it right back, so the next edge_list lookup ends up keyed at exactly the strand value that was just found in
             // the two flips are complementary — one converts "arrival" → "departure" for the current lookup, the other stores next iteration's "arrival" value in a form that, once flipped again, reproduces the departure end correctly.
-        } else if (std::find(traversed_edge_list.begin(), traversed_edge_list.end(), adjacent_nodes_vector[0].name)== traversed_edge_list.end()
-            && std::find(traversed_edge_list.begin(), traversed_edge_list.end(), adjacent_nodes_vector[1].name)== traversed_edge_list.end()){
+        } else if (adjacent_node_names.size() == 1 && std::get<0>(adjacent_nodes_vector) == last_traversed_edge){
             // if there are two adjecent nodes that share the same end point they might be a bubble
             traversed_edge_list.push_back(adjacent_nodes_vector[0].name);
             traversed_edge_list.push_back(adjacent_nodes_vector[1].name);
