@@ -50,7 +50,7 @@ public:
     int max_overall_support;
     int mean_overall_support;
     std::pair<std::vector<std::string>,std::vector<std::string> > winners;
-    std::pair<int, int> winning_pair;
+    std::pair<int, int> winning_haplotype;
     int score_haplotypes(std::string);
 };
 

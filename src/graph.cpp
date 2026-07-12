@@ -94,8 +94,6 @@ NodeEnd Graph::check_bubble(NodeEnd origniating_edge, std::vector<NodeEnd> adjac
 
 void Graph::traverse_graph(std::string start_node, Strand in_dir, std::vector<std::string > &traversed_edge_list){
     // iterative: traverses graph in specified direction, advancing to the next node when only
-    std::string last_traversed_edge;
-    last_traversed_edge = traversed_edge_list.back();
     while (true) {
         NodeEnd node{start_node, flip(in_dir)}; /// converts "the end I arrived at start_node through" into "the end I need to leave start_node through," because that's the key edge_list actually indexes on.
         std::set<NodeEnd> adjacent_nodes = edge_list[node]; // all edges collected to this nde
@@ -104,26 +102,29 @@ void Graph::traverse_graph(std::string start_node, Strand in_dir, std::vector<st
         for (auto node: adjacent_nodes_vector){
             adjacent_node_names.insert(node.name);
         }
+        bool any_already_traversed = std::any_of(adjacent_node_names.begin(), adjacent_node_names.end(), [&](const std::string& n){
+            return std::find(traversed_edge_list.begin(), traversed_edge_list.end(), n) != traversed_edge_list.end();
+        });
         if (adjacent_nodes.size() == 0){// we can traverse no further
             return;
-        } else if (adjacent_nodes.size() == 1 && std::find(traversed_edge_list.begin(), traversed_edge_list.end(), adjacent_nodes_vector[0].name) == traversed_edge_list.end()){
-            // if the last traversed edge is equal to the first adjacent node
+        } else if (adjacent_nodes.size() == 1 && !any_already_traversed){
             //travers to next contig
             traversed_edge_list.push_back(adjacent_nodes_vector[0].name);
             start_node = adjacent_nodes_vector[0].name;
             in_dir = flip(adjacent_nodes_vector[0].strand);  // e next contig and the specific end of it that this link attaches to (its arrival end, from the neighbor's perspective). Flipping it before storing it in in_dir keeps the invariant intact for the next lap: at the top of the loop, line 336 will flip it right back, so the next edge_list lookup ends up keyed at exactly the strand value that was just found in
             // the two flips are complementary — one converts "arrival" → "departure" for the current lookup, the other stores next iteration's "arrival" value in a form that, once flipped again, reproduces the departure end correctly.
-        } else if (adjacent_node_names.size() == 1 && std::get<0>(adjacent_nodes_vector) == last_traversed_edge){
-            // if there are two adjecent nodes that share the same end point they might be a bubble
-            traversed_edge_list.push_back(adjacent_nodes_vector[0].name);
-            traversed_edge_list.push_back(adjacent_nodes_vector[1].name);
+        } else if (adjacent_nodes.size() > 1 && !any_already_traversed){
+            // if there are several adjacent nodes that share the same end point they might be a (possibly >2-way) bubble
+            for (auto& n: adjacent_node_names){
+                traversed_edge_list.push_back(n);
+            }
 
             NodeEnd contig_other_end_bubble = check_bubble(node, adjacent_nodes_vector);
             if (!contig_other_end_bubble.name.empty()){ // if it is a bubble
-                // really lazy but easiest way to check if edge is hom/het for output
-                edges_in_bubbles.insert(adjacent_nodes_vector[0].name);
-                edges_in_bubbles.insert(adjacent_nodes_vector[1].name);
-                bubbles.push_back(std::make_pair(adjacent_nodes_vector[0].name, adjacent_nodes_vector[1].name));
+                for (auto n: adjacent_nodes_vector){
+                    edges_in_bubbles.insert(n.name);
+                }
+                bubbles.push_back(std::vector<std::string>(adjacent_node_names.begin(), adjacent_node_names.end())); /// add the bubble to the list of bubbles
                 /// continue traversing from other end of bubble
                 start_node = contig_other_end_bubble.name;
                 in_dir = flip(contig_other_end_bubble.strand);
@@ -132,7 +133,7 @@ void Graph::traverse_graph(std::string start_node, Strand in_dir, std::vector<st
                 return;
             }
         } else {
-            // neither branch above matched (e.g. >2 adjacent nodes, or already traversed) - nothing more to do
+            // neither branch above matched (e.g. already traversed) - nothing more to do
             return;
         }
     }
