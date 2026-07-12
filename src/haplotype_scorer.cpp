@@ -104,10 +104,6 @@ std::vector<int>  HaplotypeScorer::winner_for_barcode(std::string barcode){
             max = h.second;
         }
     }
-    //TODO: DECIDE CRITERIA FOR MINIMUM SUPPORT
-    /*if (max <10){
-        return winners;
-    }*/
     for (auto h:barcode_haplotype_mappings[barcode]){
         if (h.second == max){
             winners.push_back(h.first);
@@ -200,44 +196,26 @@ int HaplotypeScorer::score_haplotypes(std::string outfile) {
     int haplotype_support[possible_haplotypes.size()] = {0};
     int haplotype_not_support[possible_haplotypes.size()] = {0};
     int haplotype_overall_support[possible_haplotypes.size()] = {0};
-    std::map<std::pair<int, int>, int> hap_pair_not_support;
-    std::map<std::pair<int, int>, int> hap_pair_support;
-    std::map<std::pair<int, int>, int> hap_pair_support_total_score;
+    std::map<std::vector<int>, int> hap_not_support;
+    std::map<std::vector<int>, int> hap_support;
+    std::map<std::vector<int>, int> hap_support_total_score;
     std::string barcode;
     for (auto &bm: barcode_haplotype_mappings) {
         barcode = bm.first;
         std::vector<int> winners = winner_for_barcode(barcode); // ideally should be length 1
-        for (auto winner:winners){
-            int pair = possible_haplotypes.size() - 1 - winner;
-            haplotype_support[winner] += 1;
-            hap_pair_support[std::make_pair(winner, pair)] += 1;
-            haplotype_barcode_agree[winner][barcode] += bm.second[winner];
-            haplotype_barcode_disagree[winner][barcode] += bm.second[pair];
-        }
-        // for haplotype in range(len(self.list_of_possible_haplotypes)/2):
-        for (int hap = 0; hap < possible_haplotypes.size() / 2; hap++) {
-            // pair = len(self.list_of_possible_haplotypes) -1 -haplotype
-            int pair = possible_haplotypes.size() - 1 - hap;
-            if (bm.second.find(hap) != bm.second.end()) {
-                haplotype_overall_support[hap] += bm.second[hap];
-                hap_pair_support_total_score[std::make_pair(hap, pair)] += bm.second[hap];
+        for (auto possible_hap: possible_haplotypes) {
+            if (std::find(winners.begin(), winners.end(), possible_hap) == winners.end()) {
+                hap_not_support[std::vector<int>{possible_hap}] += 1;
+                haplotype_barcode_disagree[possible_hap][barcode] += bm.second[pair];
             }
-
-            if (bm.second.find(pair) != bm.second.end()) {
-                haplotype_overall_support[pair] += bm.second[pair];
-                hap_pair_support_total_score[std::make_pair(hap, pair)] += bm.second[pair];
-            }
-            if (bm.second.find(hap) == bm.second.end()) {
-                haplotype_not_support[hap] += 1;
-            }
-            if (bm.second.find(pair) == bm.second.end()) {
-                haplotype_not_support[pair] += 1;
-            }
-            if (bm.second.find(hap) == bm.second.end() and bm.second.find(pair) == bm.second.end()) {
-                hap_pair_not_support[std::make_pair(hap, pair)] += 1;
-
+            else {
+                hap_support[std::vector<int>{possible_hap}] += 1;
+                haplotype_barcode_agree[possible_hap][barcode] += bm.second[possible_hap];
+                haplotype_overall_support[possible_hap] += bm.second[possible_hap];
+                hap_support_total_score[std::vector<int>{possible_hap}] += bm.second[possible_hap];
             }
         }
+
     }
     std::vector<int> haplotype_support_vals;
     std::vector<int> haplotype_not_support_vals;
@@ -381,7 +359,7 @@ void HaplotypeScorer::decide_barcode_haplotype_support(){
                 edges.push_back(e.first); 
                 scores.push_back(e.second);
             }
-            if (*std::max_element(scores.begin(), scores.end())> 1) { 
+            if (*std::max_element(scores.begin(), scores.end())> 1) { // is score > 1
                 for (int i = 0; i < possible_haplotypes.size(); i++) {
                     auto& hset = haplotype_edge_sets[i];
                     // find all edges in each haplotype that this barcode maps to
