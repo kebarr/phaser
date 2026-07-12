@@ -1,5 +1,5 @@
 //
-// Created by Katie Barr (EI) on 12/10/2017.
+//Updated by Katie Barr on 11/07/2026.
 //
 
 #ifndef PHASER_GRAPH_H
@@ -58,7 +58,7 @@ public:
     void output_contigs_joined_to_contig_list(std::vector<std::string>, std::map<std::string, int >, std::string) const;
     std::set<std::string> edges;
     std::map<std::string, std::string>  nodes;
-    std::vector<std::pair< std::string, std::string> > bubbles;
+    std::vector<std::vector< std::string> > bubbles;
     std::set<std::string>  edges_in_bubbles;
     NodeEnd check_bubble(NodeEnd, std::vector<NodeEnd> );
     // edge list maps a node end -> set of node ends its connected to

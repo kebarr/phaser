@@ -17,37 +17,23 @@ std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
         return haplotypes;
     }
     // this assumes all bubbles have 2 contigs, but does not enforce it
-    std::vector<std::string> first;
-    std::vector<std::string> second;
-    first.push_back(std::get<0>(bubbles[0])); // start contig of bubble
-    second.push_back(std::get<1>(bubbles[0])); // end contig of bubble
-    haplotypes.push_back(first);
-    haplotypes.push_back(second);
-    auto to_index = haplotypes.size(); // number of haplotypes before adding next bubble
-    auto from_index = haplotypes.size()/2;
-    std::string b0;
-    std::string b1;
-    for (int j=1; j < bubbles.size(); j++){
-                b0 = std::get<0>(bubbles[j]); // name of contig at start of bubble
-                to_index = haplotypes.size(); // all the haplotypes pre doubling, add first possible allele to these
+    int bubble_degree;
+    bubble_degree = bubbles[0].size();
+    for (int j=1; j < bubbles[0].size(); j++){
+        haplotypes.push_back(bubbles[0][j]);
+    }
+    std::string bubble_edge_name;
+    for (int j=1; j < bubbles.size(); j++){// for each bubble
+        bubble_degree = bubbles[j].size();
         std::vector<std::vector <std::string> > new_haplotypes;
-                // duplicate each time eas each possible haplotype must include every possible traversal though the graph
-                for (auto hap: haplotypes) {
-                    new_haplotypes.push_back(hap);
-                }
-                for (auto hap: haplotypes) {
-                    new_haplotypes.push_back(hap);
-                }
-                haplotypes = new_haplotypes;
-                for (int i = 0; i < to_index; i++) {
-                    haplotypes[i].push_back(b0); // start contig for each possible haplotype
-                }
-                b1 = std::get<1>(bubbles[j]);
-
-                from_index = (haplotypes.size()) / 2; // all the haplotypes post doubling, add second possible allele to these
-                for (int i = from_index; i < haplotypes.size(); i++) {
-                    haplotypes[i].push_back(b1);
-                }
+        for (int i = 0; i < bubble_degree; i++){
+            bubble_edge_name = bubbles[j][i];
+            for (int k = 0; k < haplotypes.size(); k++){
+                new_haplotypes.push_back(haplotypes[k]); // replicate existing haplotypes for each possible bubble edge            
+                new_haplotypes[k].push_back(bubble_edge_name); 
+            }           
+        }
+        haplotypes = new_haplotypes;
     }
     return haplotypes;
 }
@@ -95,18 +81,17 @@ NodeEnd Graph::check_bubble(NodeEnd origniating_edge, std::vector<NodeEnd> adjac
             seqs.insert(node2); // add contig names in other direction
         }
     }
-    if (seqs.size() == 2){
-        // if only 2 sequences joined to all candidate nodes, they are in a bubble
-        // to avoid traversing this part again, return next node and its direction
-        for (auto seq: seqs){
-            if (seq.name != origniating_edge.name){ //  one of the two elements in seqs is always origniating_edge itself, need this to advance past bubble
-                for (auto node: adjacent_nodes){
-                    edges_in_bubbles.insert(node.name);
-                }
-                return seq;
+    // if only 2 sequences joined to all candidate nodes, they are in a bubble
+    // to avoid traversing this part again, return next node and its direction
+    for (auto seq: seqs){
+        if (seq.name != origniating_edge.name){ //  one of the two elements in seqs is always origniating_edge itself, need this to advance past bubble
+            for (auto node: adjacent_nodes){
+                edges_in_bubbles.insert(node.name);
             }
+            return seq;
         }
     }
+    
     return NodeEnd{"", Strand::Plus};
 
 }
