@@ -277,7 +277,7 @@ int HaplotypeScorer::score_haplotypes(std::string outfile) {
         winning_haplotype = std::make_pair(support_winner[0], overall_support_winner[0]);
         return 0;
     } else  if (*overall_support_max > (overall_support_mean + 2 *overall_stdev)) { // if it doesn't make it... pick best we can do, so overall support
-        winning_haplotype = overall_support_winner[0];
+        winning_haplotype = std::make_pair(support_winner[0], overall_support_winner[0]);
         return 1;
     } else {
         return 2;

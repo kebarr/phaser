@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
         Graph graph = Graph();
         graph.load_gfa(graph_filename);
         std::cout << "Traversing from start edge " << start_edge << " in + direction" << std::endl;
-        std::vector<std::string> traversed_edge_list;
+        std::set<std::string> traversed_edge_list;
         // traverse forwards 
         graph.traverse_graph(start_edge, Strand::Plus, traversed_edge_list);
         std::cout << "Found " << graph.bubbles.size() << " bubbles from + direction" << std::endl;
