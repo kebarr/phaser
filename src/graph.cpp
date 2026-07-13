@@ -3,6 +3,7 @@
 //
 
 #include <tuple>
+#include <unordered_set>
 #include "graph.h"
 
 
@@ -66,20 +67,23 @@ void Graph::load_gfa(std::string infile_name){
 
 NodeEnd Graph::check_bubble(NodeEnd origniating_edge, std::vector<NodeEnd> adjacent_nodes){
     // node list are candidate bubble contigs. if the nodes go to and from same contigs, its a bubble
-    std::set<NodeEnd> seqs; // use set so same nodes not repeated
+    std::unordered_set<NodeEnd> seqs_out; // use set so same nodes not repeated
+    std::unordered_set<NodeEnd> seqs_in;
     // to be in the same bubble, the contigs have to join the same ends of the adjacent contigs
     for (auto node: adjacent_nodes){  // add each adjecnt node to seqs
-        for (auto node2: edge_list[node]) { // check outgoing nodes
-            seqs.insert(node2);
+        for (auto node2: edge_list[node]) { // check outgoing edges
+            seqs_out.insert(node2);
         }
         NodeEnd opp_dir_node{node.name, flip(node.strand)};
-        for (auto node2: edge_list[opp_dir_node]) { // check incoming nodes
-            seqs.insert(node2); // add contig names in other direction
+        for (auto node2: edge_list[opp_dir_node]) { // check incoming edges
+            seqs_in.insert(node2); // add contig names in other direction
         }
     }
-    // if only 2 sequences joined to all candidate nodes, they are in a bubble
+    if (seqs_out.size() != 1 || seqs_in.size() != 1){ // if the nodes don't all go to the same contig, its not a bubble- might be part of more complex structure
+        return NodeEnd{"", Strand::Plus};
+    }
     // to avoid traversing this part again, return next node and its direction
-    for (auto seq: seqs){
+    for (auto seq: seqs_out){
         if (seq.name != origniating_edge.name){ //  one of the two elements in seqs is always origniating_edge itself, need this to advance past bubble
             for (auto node: adjacent_nodes){
                 edges_in_bubbles.insert(node.name);
@@ -116,7 +120,7 @@ void Graph::traverse_graph(std::string start_node, Strand in_dir, std::set<std::
         } else if (adjacent_nodes.size() > 1 && !any_already_traversed){
             // if there are several adjacent nodes that share the same end point they might be a (possibly >2-way) bubble
             for (auto& n: adjacent_node_names){
-                traversed_edge_list.push_back(n);
+                traversed_edge_list.insert(n);
             }
 
             NodeEnd contig_other_end_bubble = check_bubble(node, adjacent_nodes_vector);

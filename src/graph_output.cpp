@@ -117,7 +117,7 @@ bool Graph::can_output_graph_sequence(std::map <NodeEnd, std::vector<NodeEnd> > 
     return true;
 }
 
-void Graph::output_contigs_joined_to_contig_list(std::vector<std::string> bubble_edges, std::map<std::string, int > agreeing_barcodes, std::string outfile_name) const{
+void Graph::output_contigs_joined_to_contig_list(const std::vector<std::string>& bubble_edges, const std::unordered_map<std::string, int>& agreeing_barcodes, const std::string& outfile_name) const{
     // need to be able to reconstruct each haplotype sequence with its winning contig, phaser just outputs contig choices, so need inbetween links
     std::unordered_set<std::string> hom_edges;
     for (auto edge:edges){
