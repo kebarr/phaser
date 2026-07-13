@@ -26,15 +26,15 @@ private:
     // every edge name that appears in any possible haplotype
     std::set<std::string> haplotype_edges;
     // barcode -> edge name, kmer support
-    std::map<std::string, std::map<std::string, int> > barcode_edge_mappings;
+    std::unordered_map<std::string, std::map<std::string, int> > barcode_edge_mappings;
     std::vector<int>  winner_for_barcode(std::string barcode);
 
 public:
-    std::map<int, std::map<std::string, int > > haplotype_barcode_agree;
-    std::map<int, std::map<std::string, int > > haplotype_barcode_disagree;
-    std::map<std::string, std::map<int, int> > barcode_haplotype_mappings;
-    std::map<std::string,  int> barcode_hom_mappings;
-    std::map<std::string, int > kmers_per_barcode;
+    std::unordered_map<int, std::map<std::string, int > > haplotype_barcode_agree;
+    std::unordered_map<int, std::map<std::string, int > > haplotype_barcode_disagree;
+    std::unordered_map<std::string, std::map<int, int> > barcode_haplotype_mappings;
+    std::unordered_map<std::string,  int> barcode_hom_mappings;
+    std::unordered_map<std::string, int > kmers_per_barcode;
     void write_output_success(std::string);
     void write_output_partial_success(std::string);
     std::set <std::string> barcodes;
