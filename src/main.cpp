@@ -117,6 +117,7 @@ int main(int argc, char **argv) {
     int phased_partial_success = 0;
     int exceptions = 0;
     int no_mappings = 0;
+    int no_confident_winner = 0;
     while (std::getline(infile, line)) {
         graphs += 1;
         if (!(std::istringstream(line) >> fields[0] >> fields[1])) {
@@ -174,6 +175,9 @@ int main(int argc, char **argv) {
                         graph.write_output_subgraph(haplotype_scorer.winners.second, "partial_" + output_file + ".hap2.fasta", "hap2");
                         phased_partial_success += 1;
 
+                    } else { // success == 2: no candidate haplotype had strong enough support to call a winner
+                        std::cout << "No confident haplotype winner found" << std::endl;
+                        no_confident_winner += 1;
                     }
                 } catch (...){
                     std::cout << "Caught exception scoring haplotypes" << std::endl;
@@ -194,6 +198,6 @@ int main(int argc, char **argv) {
         }
     }
     std::cout << "Phasing " << graphs << " complete, " << phaseable << " contained > 1 bubble, " << unphaseable << " did not." << std::endl;
-    std::cout << phased_success << " graphs phased confidently, " << phased_partial_success << " graphs phased less confidently, " << no_mappings << " did not have enough mappings for phasing, and  " << exceptions << " raised." <<std::endl;
+    std::cout << phased_success << " graphs phased confidently, " << phased_partial_success << " graphs phased less confidently, " << no_confident_winner << " had no confident winner, " << no_mappings << " did not have enough mappings for phasing, and  " << exceptions << " raised." <<std::endl;
     return 0;
 }

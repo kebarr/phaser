@@ -20,6 +20,7 @@ std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
     params:  uses attributes on graph already there, no arguments passed
     returns: returns a vector containing each possible haplotype, 
             each haplotype is represented as a vector of strings- the strings being the names of each edge in this haplotype 
+            In real applications these strings would be converted to ints to save on memory
 
     A potential redesign might be to use the barcodes themselves to identify possible haplotypes with minimal support
     */
