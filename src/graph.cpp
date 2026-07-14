@@ -11,11 +11,22 @@ Graph::Graph(){
     std::vector<std::vector <int> > bubbles;
 }
 
+rief: enumarate all possible haplotypes based on bubble sturcture
 
 std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
+    /* Each bubbble in a graph contributes extends the number of possible haplotypes 
+    by the degreeofthatbubble. Because we are only taking actual links from GFAs, every link in a bubble may be part of a haplotype
+    therefore we must enumerate them all of the possible haplotypes arising from graph 
+    
+    params:  uses attributsd on graph already there, no arguments passed
+    returns: returns a vector containing each possible haplotype, 
+            each haplotype is represented as a vector of strings- the strings being the names of each edge in this haplotype 
+
+    A potential redesign might be to use the barcodes themselves to identify possible haplotypes with minimal support
+    */
     std::vector<std::vector <std::string> > haplotypes;
     if (bubbles.size() == 0){
-        return haplotypes;
+        return haplotypes; // no bubbles, GFA is a single haplotype, no need to enumerate
     }
     haplotypes.push_back(std::vector<std::string>()); // seed with one empty path so the first bubble has something to extend
     int bubble_degree;
@@ -66,8 +77,25 @@ void Graph::load_gfa(std::string infile_name){
 }
 
 NodeEnd Graph::check_bubble(NodeEnd origniating_edge, std::vector<NodeEnd> adjacent_nodes){
+    /*   For each edge that joins to multiple nodes, we need to decide if its a bubble
+        A bubble is a set of two edges in a graph that have the same edges leaving the first, 
+        and ending at the second. A bubble can have an arbirary number of edges, called the degree.
+        In practise, the degreeos of bubbles depend on the ploidy of the organism being assembler 
+        and error rate in the sequencing software
+
+        params: originating edge, as type NodeEnc
+                adjacent nodes, as a vector of NodeEnd, the edges that join to the originating edge
+        returns: The node at the end of the bubble, if the structure is indeed a bubble
+
+        Originally the same set was used for nodes from  both originating edge and adjacent edge 
+        This would have silently added non-bubbles as bubbles - the sort of error can equire significant time to notice, 
+        possible resulting in incorrect results being presented. For these aplications lab cofirmation is required, 
+        it would have been noticed before publication, but this is still a significant losso of lab time. 
+        This highlights the need for comprehensive unit testing, particularly for potential edge cases.  
+    */
+    
     // node list are candidate bubble contigs. if the nodes go to and from same contigs, its a bubble
-    std::unordered_set<NodeEnd> seqs_out; // use set so same nodes not repeated
+    std::unordered_set<NodeEnd> seqs_out; // use set so same nodes not repeated, unorderered set because for our applications, haplotype order does not matter. Would need to change this for other use cases. 
     std::unordered_set<NodeEnd> seqs_in;
     // to be in the same bubble, the contigs have to join the same ends of the adjacent contigs
     for (auto node: adjacent_nodes){  // add each adjecnt node to seqs

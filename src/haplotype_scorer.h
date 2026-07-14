@@ -32,6 +32,7 @@ private:
     std::vector<int> winner_for_barcode(const std::unordered_map<int, int>& haplotype_scores);
 
 public:
+    // unordered maps/sets may impact reproducibiilty- if haplotype order mmatters. This was never thecasein our work. 
     std::unordered_map<int, std::unordered_map<std::string, int > > haplotype_barcode_agree;
     std::unordered_map<int, std::unordered_map<std::string, int > > haplotype_barcode_disagree;
     std::unordered_map<std::string, std::unordered_map<int, int> > barcode_haplotype_mappings;
@@ -44,7 +45,7 @@ public:
     const Graph& graph;
     HaplotypeScorer(std::string, std::vector<std::vector <std::string> >, Graph&);
     void print_summary(const std::string&, const std::vector<std::pair<int, int> >&, const std::vector<std::pair<int, int> >&, const std::vector<int>&, const std::vector<int>&, const std::vector<int>&);
-    void print_pair_summary(const std::string&, const std::vector<std::pair<std::pair<int, int>, int > >&, const std::vector<std::pair<std::pair<int, int>, int > >&, const std::vector<int>&, const std::vector<int>&, const std::vector<int>& );
+    //void print_pair_summary(const std::string&, const std::vector<std::pair<std::pair<int, int>, int > >&, const std::vector<std::pair<std::pair<int, int>, int > >&, const std::vector<int>&, const std::vector<int>&, const std::vector<int>& );
     void load_mappings_from_dict(std::map<std::string, std::map<std::string, int> > &);
     void decide_barcode_haplotype_support();
     int max_overall_pair_support;
