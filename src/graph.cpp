@@ -11,7 +11,6 @@ Graph::Graph(){
     std::vector<std::vector <int> > bubbles;
 }
 
-rief: enumarate all possible haplotypes based on bubble sturcture
 
 std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
     /* Each bubbble in a graph contributes extends the number of possible haplotypes 
@@ -124,7 +123,17 @@ NodeEnd Graph::check_bubble(NodeEnd origniating_edge, std::vector<NodeEnd> adjac
 
 }
 
-void Graph::traverse_graph(std::string start_node, Strand in_dir, std::set<std::string > &traversed_edge_list){
+void Graph::traverse_graph(std::string start_node, Strand in_dir){
+    /* This function traversees every possible path through thegraph defined in the GFA
+       During traversal, it identifies all bubbles, and calculates each possible haplotype
+       
+         params: start_node, the name of the contig to start traversing from
+                in_dir, the direction of the edge we are entering the start_node from
+
+        As nodes can have edges in both directions, this traverses in the spciied direction, the in the opposite
+        This ensures all paths are enumerated
+    */
+    std::set<std::string > &traversed_edge_list;
     // iterative: traverses graph in specified direction, advancing to the next node when only
     while (true) {
         NodeEnd node{start_node, flip(in_dir)}; /// converts "the end I arrived at start_node through" into "the end I need to leave start_node through," because that's the key edge_list actually indexes on.
