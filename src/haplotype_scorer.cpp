@@ -112,41 +112,41 @@ std::vector<int> HaplotypeScorer::winner_for_barcode(const std::unordered_map<in
     return winners;
 }
 
-// void HaplotypeScorer::print_summary(const std::string& outfile, const std::vector<std::pair<int, int> >& supports, const std::vector<std::pair<int, int> >& overall_supports, const std::vector<int>& haplotype_support_vals, const std::vector<int>& haplotype_overall_support_vals, const std::vector<int>& haplotype_not_support_vals){
-//     //print results in a command-line parseable way
-//     // need scores for each, maybe top 3, potentisal hap choices- actual edge seqs for each
-//     // also include stats
-//     std::ofstream out(outfile);
-//     // support score 1, support score 1 hap, overall support score 1, overall support score 1 hap, support score 2, support score 2 hap, overall support score 2, overall support score 2 hap, support score 3, support score 3 hap, overall support score 3, overall support score 3 hap
-//     for (int i=0; i < 3; i++){
-//         out << supports[i].first << "\t" << supports[i].second << "\t" << overall_supports[i].first << "\t" <<  overall_supports[i].second;
-//     }
-//     out << std::endl;
+void HaplotypeScorer::print_summary(const std::string& outfile, const std::vector<std::pair<int, int> >& supports, const std::vector<std::pair<int, int> >& overall_supports, const std::vector<int>& haplotype_support_vals, const std::vector<int>& haplotype_overall_support_vals, const std::vector<int>& haplotype_not_support_vals){
+    //print results in a command-line parseable way
+    // need scores for each, maybe top 3, potentisal hap choices- actual edge seqs for each
+    // also include stats
+    std::ofstream out(outfile);
+    // support score 1, support score 1 hap, overall support score 1, overall support score 1 hap, support score 2, support score 2 hap, overall support score 2, overall support score 2 hap, support score 3, support score 3 hap, overall support score 3, overall support score 3 hap
+    for (int i=0; i < 3; i++){
+        out << supports[i].first << "\t" << supports[i].second << "\t" << overall_supports[i].first << "\t" <<  overall_supports[i].second;
+    }
+    out << std::endl;
 
-//     SupportStats support_stats = compute_stats(haplotype_support_vals);
-//     SupportStats not_support_stats = compute_stats(haplotype_not_support_vals);
-//     SupportStats overall_stats = compute_stats(haplotype_overall_support_vals);
+    SupportStats support_stats = compute_stats(haplotype_support_vals);
+    SupportStats not_support_stats = compute_stats(haplotype_not_support_vals);
+    SupportStats overall_stats = compute_stats(haplotype_overall_support_vals);
 
-//     log_stats("Haplotype support", support_stats);
-//     log_stats("Haplotype not support", not_support_stats);
-//     log_stats("Haplotype overall support", overall_stats);
+    log_stats("Haplotype support", support_stats);
+    log_stats("Haplotype not support", not_support_stats);
+    log_stats("Haplotype overall support", overall_stats);
 
-//     // max, min, mean, stdev for support, not support, overall support
-//     out << support_stats.max_val << "\t" << support_stats.min_val << "\t" << support_stats.mean << "\t" << support_stats.stdev_val << "\t"
-//         << not_support_stats.max_val << "\t" << not_support_stats.min_val << "\t" << not_support_stats.mean << "\t"
-//         << overall_stats.max_val << "\t" << overall_stats.min_val << std::endl;
+    // max, min, mean, stdev for support, not support, overall support
+    out << support_stats.max_val << "\t" << support_stats.min_val << "\t" << support_stats.mean << "\t" << support_stats.stdev_val << "\t"
+        << not_support_stats.max_val << "\t" << not_support_stats.min_val << "\t" << not_support_stats.mean << "\t"
+        << overall_stats.max_val << "\t" << overall_stats.min_val << std::endl;
 
-//     std::vector<int> support_indices, overall_indices;
-//     for (int i = 0; i < 3; i++){
-//         support_indices.push_back(supports[i].first);
-//         overall_indices.push_back(overall_supports[i].first);
-//     }
-//     write_ranked_block(out, "Barcode support", "Hap", 3, support_indices, possible_haplotypes);
-//     write_ranked_block(out, "Overall support", "Hap", 3, overall_indices, possible_haplotypes);
+    std::vector<int> support_indices, overall_indices;
+    for (int i = 0; i < 3; i++){
+        support_indices.push_back(supports[i].first);
+        overall_indices.push_back(overall_supports[i].first);
+    }
+    write_ranked_block(out, "Barcode support", "Hap", 3, support_indices, possible_haplotypes);
+    write_ranked_block(out, "Overall support", "Hap", 3, overall_indices, possible_haplotypes);
 
-//     max_overall_support = support_stats.max_val;
-//     mean_overall_support = support_stats.mean;
-// }
+    max_overall_support = support_stats.max_val;
+    mean_overall_support = support_stats.mean;
+}
 
 // void HaplotypeScorer::print_pair_summary(const std::string& outfile, const std::vector<std::pair<std::pair<int, int>, int > >& pair_supports, const std::vector<std::pair<std::pair<int, int>, int > >& pair_overall_supports, const std::vector<int>& hap_pair_support_values, const std::vector<int>& hap_pair_support_total_score_values, const std::vector<int>& hap_pair_not_support_values){
 //     std::ofstream out;

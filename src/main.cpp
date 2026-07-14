@@ -137,14 +137,12 @@ int main(int argc, char **argv) {
         Graph graph = Graph();
         graph.load_gfa(graph_filename);
         std::cout << "Traversing from start edge " << start_edge << " in + direction" << std::endl;
-        std::set<std::string> traversed_edge_list;
         // traverse forwards 
-        graph.traverse_graph(start_edge, Strand::Plus, traversed_edge_list);
+        graph.traverse_graph(start_edge, Strand::Plus);
         std::cout << "Found " << graph.bubbles.size() << " bubbles from + direction" << std::endl;
         std::cout << "Traversing from start edge " << start_edge << " in - direction" << std::endl;
-        traversed_edge_list.clear();
         // traverse backwards
-        graph.traverse_graph(start_edge, Strand::Minus, traversed_edge_list);
+        graph.traverse_graph(start_edge, Strand::Minus);
 
         std::cout << "Found " << graph.bubbles.size() << " bubbles  in total" << std::endl;
         if (graph.bubbles.size() > 1) { // A length-1 haplotype can never produce more than 1 matching edge, so that condition can never be satisfied

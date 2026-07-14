@@ -76,7 +76,9 @@ public:
     NodeEnd check_bubble(NodeEnd, std::vector<NodeEnd> );
     // edge list maps a node end -> set of node ends its connected to
     std::unordered_map <NodeEnd, std::set<NodeEnd> > edge_list;
-    void traverse_graph(std::string, Strand, std::set<std::string >&);
+    // nodes already visited in the current traverse_graph() call; reset at the start of each call
+    std::set<std::string> traversed_edge_list;
+    void traverse_graph(std::string, Strand);
     Graph();
     std::vector<std::vector <std::string> >  calculate_possible_haplotypes(void);
     bool can_output_graph_sequence(std::map <NodeEnd, std::vector<NodeEnd> > ) const;

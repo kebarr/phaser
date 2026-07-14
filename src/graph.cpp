@@ -13,11 +13,11 @@ Graph::Graph(){
 
 
 std::vector<std::vector <std::string> > Graph::calculate_possible_haplotypes(){
-    /* Each bubbble in a graph contributes extends the number of possible haplotypes 
-    by the degreeofthatbubble. Because we are only taking actual links from GFAs, every link in a bubble may be part of a haplotype
-    therefore we must enumerate them all of the possible haplotypes arising from graph 
+    /* Each bubble in a graph increases the number of possible haplotypes by the degree of that bubble
+    Because we are only taking actual links from GFAs, every link in a bubble may be part of a haplotype
+    Therefore this approach enumerates all of the possible haplotypes arising from graph 
     
-    params:  uses attributsd on graph already there, no arguments passed
+    params:  uses attributes on graph already there, no arguments passed
     returns: returns a vector containing each possible haplotype, 
             each haplotype is represented as a vector of strings- the strings being the names of each edge in this haplotype 
 
@@ -98,12 +98,18 @@ NodeEnd Graph::check_bubble(NodeEnd origniating_edge, std::vector<NodeEnd> adjac
     std::unordered_set<NodeEnd> seqs_in;
     // to be in the same bubble, the contigs have to join the same ends of the adjacent contigs
     for (auto node: adjacent_nodes){  // add each adjecnt node to seqs
-        for (auto node2: edge_list[node]) { // check outgoing edges
-            seqs_out.insert(node2);
+        auto out_it = edge_list.find(node);
+        if (out_it != edge_list.end()) { // check outgoing edges
+            for (auto node2: out_it->second) {
+                seqs_out.insert(node2);
+            }
         }
         NodeEnd opp_dir_node{node.name, flip(node.strand)};
-        for (auto node2: edge_list[opp_dir_node]) { // check incoming edges
-            seqs_in.insert(node2); // add contig names in other direction
+        auto in_it = edge_list.find(opp_dir_node);
+        if (in_it != edge_list.end()) { // check incoming edges
+            for (auto node2: in_it->second) {
+                seqs_in.insert(node2); // add contig names in other direction
+            }
         }
     }
     if (seqs_out.size() != 1 || seqs_in.size() != 1){ // if the nodes don't all go to the same contig, its not a bubble- might be part of more complex structure
@@ -124,7 +130,7 @@ NodeEnd Graph::check_bubble(NodeEnd origniating_edge, std::vector<NodeEnd> adjac
 }
 
 void Graph::traverse_graph(std::string start_node, Strand in_dir){
-    /* This function traversees every possible path through thegraph defined in the GFA
+    /* This function traversees every possible path through the graph defined in the GFA.
        During traversal, it identifies all bubbles, and calculates each possible haplotype
        
          params: start_node, the name of the contig to start traversing from
@@ -133,16 +139,19 @@ void Graph::traverse_graph(std::string start_node, Strand in_dir){
         As nodes can have edges in both directions, this traverses in the spciied direction, the in the opposite
         This ensures all paths are enumerated
     */
-    std::set<std::string > &traversed_edge_list;
-    // iterative: traverses graph in specified direction, advancing to the next node when only
+    traversed_edge_list.clear(); // each call traverses fresh, independent of any previous call (e.g. the opposite-direction pass)
+    // iterative: traverses graph in specified direction, advancing to the next node after determining whether it is a straight link or a bubble
     while (true) {
         NodeEnd node{start_node, flip(in_dir)}; /// converts "the end I arrived at start_node through" into "the end I need to leave start_node through," because that's the key edge_list actually indexes on.
-        std::set<NodeEnd> adjacent_nodes = edge_list[node]; // all edges collected to this nde
+        auto edge_it = edge_list.find(node);
+        static const std::set<NodeEnd> empty_node_set;
+        const std::set<NodeEnd>& adjacent_nodes = (edge_it != edge_list.end()) ? edge_it->second : empty_node_set; // all edges collected to this node
         std::vector<NodeEnd> adjacent_nodes_vector(adjacent_nodes.begin(), adjacent_nodes.end());
         std::set<std::string> adjacent_node_names;
         for (auto node: adjacent_nodes_vector){
             adjacent_node_names.insert(node.name);
         }
+        // check if any ot he nodes has already been traversed
         bool any_already_traversed = std::any_of(adjacent_node_names.begin(), adjacent_node_names.end(), [&](const std::string& n){
             return traversed_edge_list.find(n) != traversed_edge_list.end();
         });
